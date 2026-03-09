@@ -1,0 +1,4 @@
+| Dataset: preprocessing/processed_data/chb_mit_npy/epilepsy_eeg/chbmit_512win | Preprocessing: epilepsy_filter_epoch | Method: HAT             | Test Acc: NaN             | Test F1m: NaN             | Time: NaN             |
+| Dataset: preprocessing/processed_data/chb_mit_npy/epilepsy_eeg/chbmit_512win | Preprocessing: epilepsy_filter_epoch | Method: MedFormer       | Test Acc: NaN             | Test F1m: NaN             | Time: NaN             |
+| Dataset: preprocessing/processed_data/chb_mit_npy/epilepsy_eeg/chbmit_512win | Preprocessing: epilepsy_nofilter_epoch | Method: HAT             | Test Acc: NaN             | Test F1m: NaN             | Time: NaN             |
+| Dataset: preprocessing/processed_data/chb_mit_npy/epilepsy_eeg/chbmit_512win | Preprocessing: epilepsy_nofilter_epoch | Method: MedFormer       | Test Acc: NaN             | Test F1m: NaN             | Time: NaN             |

@@ -1,0 +1,18 @@
+# config/_preprocessing/epilepsy_nofilter_epoch.yaml
+# Preprocessing config: NO filtering, FIXED-LENGTH epoching based on filename.
+
+name: epilepsy_nofilter_epoch # Consider renaming for clarity
+description: "Creates fixed-length epochs from raw epilepsy data without filtering. Labels epochs based on filename (ictal/interictal)."
+
+# --- NO FILTER SECTION ---
+
+# --- Epoching Configuration (for fixed-length) ---
+epoching:
+  epoch_duration: 2.0  # Duration of each epoch in seconds (e.g., 2 seconds)
+  overlap: 0.0       # Overlap between consecutive epochs (0.0 = no overlap, 0.5 = 50% overlap)
+
+# --- Artifact Rejection (Optional) ---
+reject: null # Keep as null unless you want simple amplitude rejection
+
+# --- Resampling (Optional) ---
+resample: null # Keep as null unless you want to resample

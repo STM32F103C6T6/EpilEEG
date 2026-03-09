@@ -1,0 +1,61 @@
+# config/hat/hat_epilepsy_eeg.yaml
+# Configuration for HAT model on the preprocessed epilepsy_eeg dataset
+# (using epilepsy_nofilter_epoch preprocessing)
+
+# 模型超参数 (需要与 HAT 模型实现匹配)
+model:
+  # 模型整体结构模式: "electrode->time", "time->electrode", "parallel"
+  structure_type: "parallel" # 或您希望测试的其他结构
+
+  # 空间（电极）分支配置
+  spatial:
+    embed_dim: 64          # 空间嵌入维度
+    num_heads: 4           # 空间 Transformer 头数
+    dropout: 0.2           # 空间 Transformer dropout
+    num_layers: 2          # 空间 Transformer 层数
+    kernel_size: 3         # 空间卷积核大小
+
+  # 时域分支配置
+  temporal:
+    embed_dim: 64          # 时域嵌入维度
+    num_heads: 4           # 时域 Transformer 头数
+    dropout: 0.2           # 时域 Transformer dropout
+    num_layers: 2          # 时域 Transformer 层数
+    # --- 重要：根据您的数据调整 ---
+    # kernel_size: 31        # 时域卷积核大小。需要考虑您的采样率(sfreq)和片段长度(n_times)。
+                             # 您的片段长度是 epoch_duration(2s) * sfreq。
+                             # 例如，如果 sfreq=256Hz, n_times=512。可选 31, 41, 64 等。
+    kernel_size: 41          # 示例值，请调整
+    stride: 1              # 时域卷积步长。 stride=1 保留较多信息。
+    pooling_ratio: 2       # 时域下采样比例 (e.g., 2 -> 长度减半)
+
+  # 融合层配置
+  fusion:
+    embed_dim: 128         # 融合/分类器输入维度
+    num_heads: 4           # (仅用于串行结构)
+    dropout: 0.2           # (仅用于串行结构)
+    num_layers: 1          # (仅用于串行结构)
+
+  # 分类头配置 (num_classes 会被 dataset_info 覆盖)
+  classifier:
+    hidden_dim: 128        # 分类头隐藏层维度
+    dropout: 0.2
+
+# 训练过程配置
+training:
+  optimizer: 'adam'     # 优化器: adam, adamw, sgd
+  lr: 0.0001           # 学习率 (需要调优)
+  weight_decay: 0.0001    # 权重衰减 (adamw 常配合使用)
+  loss: 'crossentropyloss' # 损失函数
+  batch_size: 128       # 批大小 (根据 GPU 显存调整)
+  epochs: 100          # 最大训练轮数 (需要调优)
+  patience: 10       # 早停耐心 (需要调优) 原20
+  print_freq: 1        # 每隔多少轮打印一次信息
+  debug: false
+  # use_amp: True       # (可选) 如果 GPU 支持且想加速，可以开启混合精度
+
+  # (可选) 学习率调度器配置
+  scheduler:
+    type: 'cosineannealinglr'
+    T_max: 100         # 通常等于 epochs
+    eta_min: 1e-6      # 最小学习率

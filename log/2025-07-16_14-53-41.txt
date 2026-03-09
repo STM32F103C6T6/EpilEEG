@@ -1,0 +1,2 @@
+| Dataset: epilepsy_eeg    | Preprocessing: basic_filter_epoch   | Method: HAT             | Test Acc: NaN             | Test F1m: NaN             | Time: NaN             |
+| Dataset: epilepsy_eeg    | Preprocessing: basic_filter_epoch   | Method: MedFormer       | Test Acc: NaN             | Test F1m: NaN             | Time: NaN             |

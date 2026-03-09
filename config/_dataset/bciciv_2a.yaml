@@ -1,0 +1,28 @@
+# config/_dataset/bciciv_2a.yaml
+name: bciciv_2a
+description: "BCI Competition IV Dataset 2a. 9 subjects, 4 motor imagery classes (left hand, right hand, feet, tongue), 22 EEG channels."
+# 原始采样率 (Hz)
+sfreq: 250
+# 被试ID
+subjects: !!python/object/apply:range [1, 10] # Subjects 1 to 9
+# MNE读取GDF文件时的事件ID映射
+# 769: Left hand, 770: Right hand, 771: Feet, 772: Tongue
+event_id:
+  left_hand: 769
+  right_hand: 770
+  feet: 771
+  tongue: 772
+# 类别映射
+label_map:
+  769: 0
+  770: 1
+  771: 2
+  772: 3
+# 类别数
+n_classes: 4
+# 数据划分配置
+split:
+  type: 'subject'
+  test_size: 0.2 # ~2 subjects for testing
+  val_size: 0.15 # ~1 subject for validation
+  # split_seed: 42

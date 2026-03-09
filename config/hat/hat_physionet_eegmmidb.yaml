@@ -1,0 +1,56 @@
+# config/hat/hat_physionet_eegmmidb.yaml
+# Configuration for HAT model on physionet_eegmmidb dataset
+
+# 模型超参数 (需要与 HAT 模型实现匹配)
+model:
+  # 模型整体结构模式: "electrode->time", "time->electrode", "parallel"
+  structure_type: "parallel"
+
+  # 空间（电极）分支配置
+  spatial:
+    embed_dim: 64
+    num_heads: 4
+    dropout: 0.15 # 稍作调整示例
+    num_layers: 2 # 减少层数示例
+    kernel_size: 3
+
+  # 时域分支配置
+  temporal:
+    embed_dim: 64
+    num_heads: 4
+    dropout: 0.15
+    num_layers: 2
+    kernel_size: 41 # 调整卷积核大小示例 (需要根据 sfreq 调整，原 sfreq 160Hz)
+    stride: 1 # 使用 stride=1 避免过度下采样
+    pooling_ratio: 2 # 2倍下采样
+
+  # 融合层配置
+  fusion:
+    embed_dim: 128 # 最终融合/分类器输入维度
+    num_heads: 4   # 仅用于串行结构的融合 Transformer
+    dropout: 0.15  # 仅用于串行结构的融合 Transformer
+    num_layers: 1  # 仅用于串行结构的融合 Transformer
+
+  # 分类头配置 (num_classes 会被 dataset_info 覆盖)
+  classifier:
+    hidden_dim: 128
+    dropout: 0.25
+    # num_classes: 2 # 这个值会被忽略，使用 dataset_info['n_classes']
+
+# 训练过程配置
+training:
+  optimizer: 'adamw' # 使用 AdamW 优化器示例
+  lr: 0.0005         # 调整学习率
+  weight_decay: 0.01   # AdamW 通常配合 weight decay
+  loss: 'crossentropyloss'
+  batch_size: 32       # 根据 GPU 显存调整
+  epochs: 200          # 训练轮数
+  patience: 40         # 早停耐心
+  print_freq: 5       # 打印频率
+  debug: false
+
+  # (可选) 学习率调度器配置
+  scheduler:
+    type: 'cosineannealinglr' # 使用余弦退火示例
+    T_max: 200 # 通常等于 epochs
+    eta_min: 1e-6 # 最小学习率

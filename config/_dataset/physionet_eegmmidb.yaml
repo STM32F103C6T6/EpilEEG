@@ -1,0 +1,25 @@
+# config/_dataset/physionet_eegmmidb.yaml
+name: physionet_eegmmidb
+description: "PhysioNet EEG Motor Movement/Imagery Dataset. Contains 64-channel EEG recordings from 109 subjects performing motor execution and imagery tasks."
+# 原始采样率 (Hz)
+sfreq: 160
+# 包含的被试列表或范围 (根据实际下载情况确定)
+subjects: !!python/object/apply:range [1, 110] # Python range object for 1 to 109
+# MNE读取原始数据时的事件ID映射 (基于数据集的 .event 文件或标注)
+# T0=Rest, T1=Left Fist Imagery/Execution, T2=Right Fist Imagery/Execution
+# 这里我们只关心左右手任务
+event_id:
+  left_hand: 2  # Corresponds to T1 event marker in the EDF files
+  right_hand: 3 # Corresponds to T2 event marker in the EDF files
+# 将原始事件ID映射到模型训练用的类别标签 (0, 1, ...)
+label_map:
+  2: 0  # T1 (left_hand) -> class 0
+  3: 1  # T2 (right_hand) -> class 1
+# 数据集总类别数
+n_classes: 2
+# 数据划分配置 (示例：按被试划分)
+split:
+  type: 'subject' # 按被试划分
+  test_size: 0.2  # 测试集占总被试的比例
+  val_size: 0.1   # 验证集占 1-test_size 剩余被试的比例
+  # split_seed: 42 # 可以指定一个固定的种子用于划分被试，在total_exp.py中设置

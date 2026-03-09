@@ -1,0 +1,21 @@
+# config/_dataset/depression_meg.yaml
+name: depression_meg # 数据集名称，对应 data/depression_meg/ 目录
+description: "Depression dataset from MEG recordings, stored as NPY files."
+loader_type: 'depression_npy' # 对应新的 Preprocessor
+
+# --- IMPORTANT: MUST PROVIDE SFREQ ---
+sfreq: 250 # 必须提供 NPY 文件对应的原始采样率 (Hz)
+
+# subjects 列表不再需要，因为 Preprocessor 会扫描目录
+# event_id 和 label_map 也不再需要，标签来自文件名
+
+n_classes: 2 # 类别数 (normal=0, patient=1)
+
+# split 部分在这里不再直接用于划分病人，因为是 segment 级别
+# 但 benchmarking 框架可能仍需要这些比例来计算最终划分的文件数
+# 或者需要修改 benchmark 框架以支持基于 segment 元数据的划分
+split:
+  type: 'segment_metadata' # <--- 定义一种新的划分类型 (需要后续支持)
+  test_ratio: 0.15
+  val_ratio: 0.15
+  group_by: 'subject_id' # <--- 指定按元数据中的 subject_id 列进行分组划分

@@ -1,0 +1,4 @@
+| Dataset: epilepsy_eeg    | Preprocessing: epilepsy_filter_epoch | Method: HAT             | Test Acc: 74.76 ¡À 2.72    | Test F1m: 69.89 ¡À 2.36    | Time: 228.24 ¡À 21.01  |
+| Dataset: epilepsy_eeg    | Preprocessing: epilepsy_filter_epoch | Method: MedFormer       | Test Acc: 28.35 ¡À 0.00    | Test F1m: 22.09 ¡À 0.00    | Time: 68.24 ¡À 0.58    |
+| Dataset: epilepsy_eeg    | Preprocessing: epilepsy_nofilter_epoch | Method: HAT             | Test Acc: 71.22 ¡À 2.63    | Test F1m: 63.99 ¡À 4.60    | Time: 237.07 ¡À 48.65  |
+| Dataset: epilepsy_eeg    | Preprocessing: epilepsy_nofilter_epoch | Method: MedFormer       | Test Acc: 28.38 ¡À 0.00    | Test F1m: 22.11 ¡À 0.00    | Time: 48.73 ¡À 0.36    |

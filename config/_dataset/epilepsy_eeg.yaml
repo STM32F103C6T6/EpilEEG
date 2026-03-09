@@ -1,0 +1,71 @@
+# config/_dataset/epilepsy_eeg.yaml
+# Configuration for the restructured epilepsy dataset
+
+name: epilepsy_eeg  # Matches the folder name containing Patient_XXX subfolders
+description: "Restructured epilepsy dataset with ictal and interictal EDF files per patient."
+
+# Crucial: Specify the preprocessor that understands the Patient_XXX structure
+loader_type: 'epilepsy_edf'
+
+# --- IMPORTANT: Verify and Update These Values ---
+# List ALL patient identifiers (folder names) created by your renaming script.
+# Example for 20 patients:
+subjects:
+  - Patient_001
+  - Patient_002
+  - Patient_003
+  - Patient_004
+  - Patient_005
+  - Patient_006
+  - Patient_007
+  - Patient_008
+  - Patient_009
+  - Patient_010
+  - Patient_011
+  - Patient_012
+  - Patient_013
+  - Patient_014
+  - Patient_015
+  - Patient_016
+  - Patient_017
+  - Patient_018
+  - Patient_019
+  - Patient_020
+# If you have many sequential patients, you could potentially use YAML tags,
+# but an explicit list is often safer and clearer.
+
+# Original sampling frequency (Hz) of the RAW EDF files.
+# MUST be verified from your data source or by inspecting the files.
+sfreq: 256 # Example value - PLEASE VERIFY!
+
+# How events are marked *inside* the EDF Annotations.
+# This is HIGHLY dataset-specific. You MUST inspect your EDF files
+# (e.g., using EDFBrowser or mne.read_annotations) to find the correct
+# descriptions or event codes used to mark seizure vs. non-seizure periods.
+# Replace 'SeizureOnset' and 'Background' with the actual strings/codes.
+event_id:
+  # Option 1: Using string descriptions in annotations
+  seizure: 'Seizure Start'   # Example: Replace with the actual annotation text for seizure start/period
+  background: 'Background Activity' # Example: Replace with annotation text for non-seizure periods
+  # Option 2: Using numerical event codes (if applicable)
+  # seizure: 1
+  # background: 0
+
+# How the event_id descriptions/codes map to numerical labels for the model (0, 1, ...)
+label_map:
+  # Match the keys exactly with the event_id keys above
+  'Seizure Start': 1
+  'Background Activity': 0
+  # If using numerical event_id:
+  # 1: 1 # Seizure event maps to label 1
+  # 0: 0 # Background event maps to label 0
+
+# Total number of classes for the classification task
+n_classes: 2
+
+# Data splitting configuration (based on subjects)
+split:
+  type: 'subject'     # Ensures patient data stays within one set (train/val/test)
+  test_size: 0.25      # Proportion of subjects for the test set
+  val_size: 0.25       # Proportion of the remaining subjects for the validation set
+  # split_seed: 42    # Optional: Fixed seed for reproducible subject splits across runs

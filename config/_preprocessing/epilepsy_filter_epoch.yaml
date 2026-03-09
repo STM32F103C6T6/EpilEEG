@@ -1,0 +1,28 @@
+# config/_preprocessing/epilepsy_filter_epoch.yaml
+# Preprocessing config for epilepsy data: Band-pass filtering + Fixed-length epoching.
+
+# --- 改名以区分 ---
+name: epilepsy_filter_epoch
+description: "Applies band-pass filtering (e.g., 0.5-45Hz) and then creates fixed-length epochs from epilepsy data. Labels epochs based on filename (ictal/interictal)."
+
+# --- 滤波配置 ---
+filter:
+  l_freq: 0.5  # 低截止频率 (Hz) - 去除慢漂移
+  h_freq: 45.0 # 高截止频率 (Hz) - 去除高频噪声和部分工频干扰
+  # MNE 默认使用 FIR 滤波器和零相位设置，通常无需额外指定 method 和 fir_design
+  # method: 'fir'
+  # fir_design: 'firwin'
+
+# --- Epoching Configuration (for fixed-length) ---
+epoching:
+  epoch_duration: 2.0  # 每个 epoch 的秒数 (保持与之前一致或根据需要调整)
+  overlap: 0.5       # 重叠比例 (保持与之前一致或根据需要调整)
+
+# --- Artifact Rejection (保持禁用或根据需要启用) ---
+reject: null
+
+# --- Resampling (保持禁用或根据需要启用) ---
+resample: null
+
+# --- File Type Filtering (保持或根据需要调整) ---
+# file_type_filter: ['ictal', 'interictal']

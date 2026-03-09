@@ -1,0 +1,35 @@
+# config/_preprocessing/epilepsy_nofilter_epoch.yaml
+# Preprocessing config for epilepsy data: NO filtering, only epoching.
+
+name: epilepsy_nofilter_epoch
+description: "Epochs raw epilepsy data around specified events without applying band-pass filtering."
+
+# --- NO FILTER SECTION ---
+# The 'filter' section is intentionally omitted to prevent filtering.
+# The BasePreprocessor will skip filtering if `preprocess_conf.filter` is None.
+
+# --- Epoching Configuration ---
+# This section is REQUIRED because models typically need fixed-length input segments (epochs).
+epoching:
+  epoch_duration: 2.0
+  overlap: 0.0
+
+  # Baseline correction usually relies on filtered data and a pre-event period.
+  # Set to null since we are not filtering and starting epochs at t=0.
+  baseline: null
+
+# --- Artifact Rejection ---
+# Set to null to disable automatic rejection based on amplitude thresholds.
+# Manual or more sophisticated rejection might be needed separately.
+reject: null
+
+# --- Resampling ---
+# Set to null to disable resampling. Data will keep its original sampling frequency.
+resample: null
+
+# --- (Optional) File Type Filtering ---
+# If your renamed files include the type ('ictal', 'interictal') and you only
+# want to process specific types, uncomment and list them here.
+# Otherwise, the preprocessor will load all .edf files found for the subject.
+# file_type_filter: ['ictal', 'interictal'] # Process both types
+# file_type_filter: ['interictal']        # Process only interictal files

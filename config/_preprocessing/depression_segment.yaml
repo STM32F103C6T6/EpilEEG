@@ -1,0 +1,18 @@
+# config/_preprocessing/depression_segment.yaml
+name: depression_segment
+description: "Segments NPY files into fixed-length windows based on filename labels."
+
+# --- 不进行滤波或重采样 (可以根据需要添加) ---
+filter: null
+resample: null
+
+# --- Epoching (分段) 配置 ---
+epoching:
+  epoch_duration: 2.0  # 每个 segment 的秒数
+  overlap: 0.5       # segment 间的重叠比例
+
+# --- 伪迹剔除 (可选) ---
+reject: null
+
+# --- 可选：是否在分段前进行标准化 ---
+# normalize: True

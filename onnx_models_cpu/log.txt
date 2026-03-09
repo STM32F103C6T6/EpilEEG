@@ -1,0 +1,555 @@
+D:\app\ananconda\envs\dianxian0\python.exe D:\program\onnx\dianxian\EpilepsyEEG-master\total_exp.py --datasets epilepsy_eeg --preprocess_methods epilepsy_filter_epoch epilepsy_nofilter_epoch --methods HAT --runs 5 --split_seed 666 --start_seed 666 
+--- Experiment Configuration ---
+Namespace(runs=5, start_seed=666, split_seed=666, methods=['HAT'], datasets=['epilepsy_eeg'], preprocess_methods=['epilepsy_filter_epoch', 'epilepsy_nofilter_epoch'], device='cuda:0', num_workers=0, processed_data_path='./processed_data/')
+-------------------------------
+
+===== Starting Benchmark for: Data=epilepsy_eeg, Preprocess=epilepsy_filter_epoch, Model=HAT =====
+
+--- Run 1/5 (Seed: 666) ---
+Random seed set to 666
+
+--- Running Exp: Data=epilepsy_eeg, Preprocess=epilepsy_filter_epoch, Model=HAT, Seed=666 ---
+Random seed set to 666
+Data split: 10 train, 5 val, 5 test subjects
+Loading data for subjects: ['Patient_013', 'Patient_019', 'Patient_012', 'Patient_006', 'Patient_009', 'Patient_001', 'Patient_015', 'Patient_004', 'Patient_008', 'Patient_014'] from ./processed_data/epilepsy_eeg\epilepsy_filter_epoch
+Loaded total 6292 epochs. Shape: (6292, 33, 512)
+Loading data for subjects: ['Patient_007', 'Patient_010', 'Patient_005', 'Patient_002', 'Patient_003'] from ./processed_data/epilepsy_eeg\epilepsy_filter_epoch
+Loaded total 1669 epochs. Shape: (1669, 33, 512)
+Loading data for subjects: ['Patient_016', 'Patient_017', 'Patient_011', 'Patient_020', 'Patient_018'] from ./processed_data/epilepsy_eeg\epilepsy_filter_epoch
+Loaded total 1774 epochs. Shape: (1774, 33, 512)
+Dataset Info: Classes=2, Channels=33, Samples/TimePoints=512
+Building HAT model...
+
+--- Exporting the best model to a CPU-only ONNX format ---
+A deep copy of the model has been created and moved to CPU for export.
+Created a dummy input tensor on CPU with shape: torch.Size([1, 33, 512])
+D:\program\onnx\dianxian\EpilepsyEEG-master\models\hat.py:26: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
+  q, k, v = qkv.permute(2, 0, 3, 1, 4)  # [3, batch, num_heads, seq_len, head_dim]
+Successfully exported CPU-only ONNX model to: experiment_outputs\onnx_models_cpu\epilepsy_eeg_epilepsy_filter_epoch_HAT_seed666_cpu.onnx
+Evaluating on Test Set...
+Evaluating on Test Set...
+Test Loss: 0.6498 | Test Acc: 71.36%
+Test Metrics: {'accuracy': 0.713641488162345, 'f1_macro': 0.4164473684210526, 'f1_weighted': 0.5967357443778556, 'kappa': -0.00561282446700484, 'specificity': 0.0, 'sensitivity': 0.996066089693155, 'auc': np.float64(0.40416978850735086)}
+Epoch: 001/100 | Time: 8.51s | LR: 1.0e-04 | Train Loss: 0.6465 | Train Acc: 61.60% | Val Loss: 1.0266 | Val Acc: 24.09%
+Epoch: 002/100 | Time: 8.10s | LR: 1.0e-04 | Train Loss: 0.4493 | Train Acc: 76.14% | Val Loss: 1.4791 | Val Acc: 44.22%
+Epoch: 003/100 | Time: 7.91s | LR: 1.0e-04 | Train Loss: 0.3232 | Train Acc: 82.90% | Val Loss: 1.5931 | Val Acc: 54.10%
+Epoch: 004/100 | Time: 7.88s | LR: 1.0e-04 | Train Loss: 0.2511 | Train Acc: 87.38% | Val Loss: 1.7941 | Val Acc: 54.94%
+Epoch: 005/100 | Time: 7.88s | LR: 1.0e-04 | Train Loss: 0.2126 | Train Acc: 89.43% | Val Loss: 1.9307 | Val Acc: 55.72%
+Epoch: 006/100 | Time: 7.86s | LR: 1.0e-04 | Train Loss: 0.1807 | Train Acc: 91.02% | Val Loss: 2.0067 | Val Acc: 53.39%
+Epoch: 007/100 | Time: 7.86s | LR: 1.0e-04 | Train Loss: 0.1523 | Train Acc: 92.63% | Val Loss: 1.4334 | Val Acc: 58.30%
+Epoch: 008/100 | Time: 7.87s | LR: 1.0e-04 | Train Loss: 0.1344 | Train Acc: 93.55% | Val Loss: 1.0396 | Val Acc: 71.42%
+Epoch: 009/100 | Time: 7.86s | LR: 1.0e-04 | Train Loss: 0.1200 | Train Acc: 94.42% | Val Loss: 1.0674 | Val Acc: 71.42%
+Epoch: 010/100 | Time: 7.86s | LR: 1.0e-04 | Train Loss: 0.1130 | Train Acc: 94.49% | Val Loss: 0.9547 | Val Acc: 75.79%
+Epoch: 011/100 | Time: 7.87s | LR: 1.0e-04 | Train Loss: 0.1124 | Train Acc: 94.64% | Val Loss: 0.9615 | Val Acc: 79.03%
+Epoch: 012/100 | Time: 7.87s | LR: 1.0e-04 | Train Loss: 0.0972 | Train Acc: 95.33% | Val Loss: 0.9896 | Val Acc: 79.75%
+Epoch: 013/100 | Time: 7.87s | LR: 1.0e-04 | Train Loss: 0.0802 | Train Acc: 96.15% | Val Loss: 1.1855 | Val Acc: 76.69%
+Epoch: 014/100 | Time: 7.86s | LR: 1.0e-04 | Train Loss: 0.0821 | Train Acc: 96.27% | Val Loss: 1.3146 | Val Acc: 70.82%
+Early stopping triggered at epoch 14 (Patience: 2)
+Training finished. Total time: 111.08s
+Best Validation Accuracy: 79.75% at epoch 12
+
+--- Exporting the best model to a CPU-only ONNX format ---
+A deep copy of the model has been created and moved to CPU for export.
+Created a dummy input tensor on CPU with shape: torch.Size([1, 33, 512])
+D:\program\onnx\dianxian\EpilepsyEEG-master\models\hat.py:26: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
+  q, k, v = qkv.permute(2, 0, 3, 1, 4)  # [3, batch, num_heads, seq_len, head_dim]
+Successfully exported CPU-only ONNX model to: experiment_outputs\onnx_models_cpu\epilepsy_eeg_epilepsy_filter_epoch_HAT_seed666_cpu.onnx
+Evaluating on Test Set...
+Evaluating on Test Set...
+Test Loss: 0.8325 | Test Acc: 75.31%
+Test Metrics: {'accuracy': 0.7531003382187148, 'f1_macro': 0.689277230811066, 'f1_weighted': 0.7502425871407603, 'kappa': 0.3788763671303572, 'specificity': 0.5288270377733598, 'sensitivity': 0.8418568056648308, 'auc': np.float64(0.7765953453159877)}
+Evaluating on Test Set...
+Test Loss: 0.8325 | Test Acc: 75.31%
+Test Metrics: {'accuracy': 0.7531003382187148, 'f1_macro': 0.689277230811066, 'f1_weighted': 0.7502425871407603, 'kappa': 0.3788763671303572, 'specificity': 0.5288270377733598, 'sensitivity': 0.8418568056648308, 'auc': np.float64(0.7765953453159877)}
+
+--- Run 2/5 (Seed: 667) ---
+Random seed set to 667
+
+--- Running Exp: Data=epilepsy_eeg, Preprocess=epilepsy_filter_epoch, Model=HAT, Seed=667 ---
+Random seed set to 667
+Data split: 10 train, 5 val, 5 test subjects
+Loading data for subjects: ['Patient_013', 'Patient_019', 'Patient_012', 'Patient_006', 'Patient_009', 'Patient_001', 'Patient_015', 'Patient_004', 'Patient_008', 'Patient_014'] from ./processed_data/epilepsy_eeg\epilepsy_filter_epoch
+Loaded total 6292 epochs. Shape: (6292, 33, 512)
+Loading data for subjects: ['Patient_007', 'Patient_010', 'Patient_005', 'Patient_002', 'Patient_003'] from ./processed_data/epilepsy_eeg\epilepsy_filter_epoch
+Loaded total 1669 epochs. Shape: (1669, 33, 512)
+Loading data for subjects: ['Patient_016', 'Patient_017', 'Patient_011', 'Patient_020', 'Patient_018'] from ./processed_data/epilepsy_eeg\epilepsy_filter_epoch
+Loaded total 1774 epochs. Shape: (1774, 33, 512)
+Dataset Info: Classes=2, Channels=33, Samples/TimePoints=512
+Building HAT model...
+
+--- Exporting the best model to a CPU-only ONNX format ---
+A deep copy of the model has been created and moved to CPU for export.
+Created a dummy input tensor on CPU with shape: torch.Size([1, 33, 512])
+D:\program\onnx\dianxian\EpilepsyEEG-master\models\hat.py:26: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
+  q, k, v = qkv.permute(2, 0, 3, 1, 4)  # [3, batch, num_heads, seq_len, head_dim]
+Successfully exported CPU-only ONNX model to: experiment_outputs\onnx_models_cpu\epilepsy_eeg_epilepsy_filter_epoch_HAT_seed667_cpu.onnx
+Evaluating on Test Set...
+Evaluating on Test Set...
+Test Loss: 0.7050 | Test Acc: 28.97%
+Test Metrics: {'accuracy': 0.2897406989853439, 'f1_macro': 0.230557395287868, 'f1_weighted': 0.13817370171132032, 'kappa': 0.0049263101287179145, 'specificity': 1.0, 'sensitivity': 0.00865460267505901, 'auc': np.float64(0.4952003165898394)}
+Epoch: 001/100 | Time: 7.91s | LR: 1.0e-04 | Train Loss: 0.6522 | Train Acc: 61.78% | Val Loss: 0.9748 | Val Acc: 24.09%
+Epoch: 002/100 | Time: 7.86s | LR: 1.0e-04 | Train Loss: 0.4506 | Train Acc: 76.32% | Val Loss: 1.7434 | Val Acc: 39.72%
+Epoch: 003/100 | Time: 7.86s | LR: 1.0e-04 | Train Loss: 0.3090 | Train Acc: 84.28% | Val Loss: 1.7985 | Val Acc: 52.43%
+Epoch: 004/100 | Time: 7.94s | LR: 1.0e-04 | Train Loss: 0.2470 | Train Acc: 86.81% | Val Loss: 2.1324 | Val Acc: 54.34%
+Epoch: 005/100 | Time: 7.91s | LR: 1.0e-04 | Train Loss: 0.1981 | Train Acc: 90.26% | Val Loss: 2.3099 | Val Acc: 53.98%
+Epoch: 006/100 | Time: 7.94s | LR: 1.0e-04 | Train Loss: 0.1678 | Train Acc: 91.96% | Val Loss: 2.2835 | Val Acc: 51.95%
+Early stopping triggered at epoch 6 (Patience: 2)
+Training finished. Total time: 47.42s
+Best Validation Accuracy: 54.34% at epoch 4
+
+--- Exporting the best model to a CPU-only ONNX format ---
+A deep copy of the model has been created and moved to CPU for export.
+Created a dummy input tensor on CPU with shape: torch.Size([1, 33, 512])
+D:\program\onnx\dianxian\EpilepsyEEG-master\models\hat.py:26: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
+  q, k, v = qkv.permute(2, 0, 3, 1, 4)  # [3, batch, num_heads, seq_len, head_dim]
+Successfully exported CPU-only ONNX model to: experiment_outputs\onnx_models_cpu\epilepsy_eeg_epilepsy_filter_epoch_HAT_seed667_cpu.onnx
+Evaluating on Test Set...
+Evaluating on Test Set...
+Test Loss: 1.0037 | Test Acc: 67.59%
+Test Metrics: {'accuracy': 0.6758737316798196, 'f1_macro': 0.668011587780431, 'f1_weighted': 0.6901292673215682, 'kappa': 0.3850623287150965, 'specificity': 0.9204771371769384, 'sensitivity': 0.5790715971675846, 'auc': np.float64(0.8600779274001936)}
+Evaluating on Test Set...
+Test Loss: 1.0037 | Test Acc: 67.59%
+Test Metrics: {'accuracy': 0.6758737316798196, 'f1_macro': 0.668011587780431, 'f1_weighted': 0.6901292673215682, 'kappa': 0.3850623287150965, 'specificity': 0.9204771371769384, 'sensitivity': 0.5790715971675846, 'auc': np.float64(0.8600779274001936)}
+
+--- Run 3/5 (Seed: 668) ---
+Random seed set to 668
+
+--- Running Exp: Data=epilepsy_eeg, Preprocess=epilepsy_filter_epoch, Model=HAT, Seed=668 ---
+Random seed set to 668
+Data split: 10 train, 5 val, 5 test subjects
+Loading data for subjects: ['Patient_013', 'Patient_019', 'Patient_012', 'Patient_006', 'Patient_009', 'Patient_001', 'Patient_015', 'Patient_004', 'Patient_008', 'Patient_014'] from ./processed_data/epilepsy_eeg\epilepsy_filter_epoch
+Loaded total 6292 epochs. Shape: (6292, 33, 512)
+Loading data for subjects: ['Patient_007', 'Patient_010', 'Patient_005', 'Patient_002', 'Patient_003'] from ./processed_data/epilepsy_eeg\epilepsy_filter_epoch
+Loaded total 1669 epochs. Shape: (1669, 33, 512)
+Loading data for subjects: ['Patient_016', 'Patient_017', 'Patient_011', 'Patient_020', 'Patient_018'] from ./processed_data/epilepsy_eeg\epilepsy_filter_epoch
+Loaded total 1774 epochs. Shape: (1774, 33, 512)
+Dataset Info: Classes=2, Channels=33, Samples/TimePoints=512
+Building HAT model...
+
+--- Exporting the best model to a CPU-only ONNX format ---
+A deep copy of the model has been created and moved to CPU for export.
+Created a dummy input tensor on CPU with shape: torch.Size([1, 33, 512])
+D:\program\onnx\dianxian\EpilepsyEEG-master\models\hat.py:26: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
+  q, k, v = qkv.permute(2, 0, 3, 1, 4)  # [3, batch, num_heads, seq_len, head_dim]
+Successfully exported CPU-only ONNX model to: experiment_outputs\onnx_models_cpu\epilepsy_eeg_epilepsy_filter_epoch_HAT_seed668_cpu.onnx
+Evaluating on Test Set...
+Evaluating on Test Set...
+Test Loss: 0.6971 | Test Acc: 38.95%
+Test Metrics: {'accuracy': 0.3895152198421646, 'f1_macro': 0.38141523767759533, 'f1_weighted': 0.35077097017814113, 'kappa': 0.05093575530761907, 'specificity': 0.8886679920477137, 'sensitivity': 0.1919748229740362, 'auc': np.float64(0.507885026583223)}
+Epoch: 001/100 | Time: 7.95s | LR: 1.0e-04 | Train Loss: 0.6355 | Train Acc: 63.70% | Val Loss: 1.0110 | Val Acc: 27.20%
+Epoch: 002/100 | Time: 7.88s | LR: 1.0e-04 | Train Loss: 0.3859 | Train Acc: 79.88% | Val Loss: 1.5759 | Val Acc: 49.31%
+Epoch: 003/100 | Time: 7.91s | LR: 1.0e-04 | Train Loss: 0.2940 | Train Acc: 83.98% | Val Loss: 1.8518 | Val Acc: 54.58%
+Epoch: 004/100 | Time: 7.86s | LR: 1.0e-04 | Train Loss: 0.2354 | Train Acc: 87.56% | Val Loss: 2.1044 | Val Acc: 55.24%
+Epoch: 005/100 | Time: 7.89s | LR: 1.0e-04 | Train Loss: 0.1962 | Train Acc: 89.92% | Val Loss: 2.3300 | Val Acc: 52.55%
+Epoch: 006/100 | Time: 7.91s | LR: 1.0e-04 | Train Loss: 0.1751 | Train Acc: 90.92% | Val Loss: 2.4211 | Val Acc: 53.68%
+Early stopping triggered at epoch 6 (Patience: 2)
+Training finished. Total time: 47.41s
+Best Validation Accuracy: 55.24% at epoch 4
+
+--- Exporting the best model to a CPU-only ONNX format ---
+A deep copy of the model has been created and moved to CPU for export.
+Created a dummy input tensor on CPU with shape: torch.Size([1, 33, 512])
+D:\program\onnx\dianxian\EpilepsyEEG-master\models\hat.py:26: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
+  q, k, v = qkv.permute(2, 0, 3, 1, 4)  # [3, batch, num_heads, seq_len, head_dim]
+Successfully exported CPU-only ONNX model to: experiment_outputs\onnx_models_cpu\epilepsy_eeg_epilepsy_filter_epoch_HAT_seed668_cpu.onnx
+Evaluating on Test Set...
+Evaluating on Test Set...
+Test Loss: 0.9535 | Test Acc: 64.43%
+Test Metrics: {'accuracy': 0.6443066516347238, 'f1_macro': 0.6381715833552865, 'f1_weighted': 0.65856869347913, 'kappa': 0.33804482679909786, 'specificity': 0.9065606361829026, 'sensitivity': 0.5405192761605035, 'auc': np.float64(0.8562738439543699)}
+Evaluating on Test Set...
+Test Loss: 0.9535 | Test Acc: 64.43%
+Test Metrics: {'accuracy': 0.6443066516347238, 'f1_macro': 0.6381715833552865, 'f1_weighted': 0.65856869347913, 'kappa': 0.33804482679909786, 'specificity': 0.9065606361829026, 'sensitivity': 0.5405192761605035, 'auc': np.float64(0.8562738439543699)}
+
+--- Run 4/5 (Seed: 669) ---
+Random seed set to 669
+
+--- Running Exp: Data=epilepsy_eeg, Preprocess=epilepsy_filter_epoch, Model=HAT, Seed=669 ---
+Random seed set to 669
+Data split: 10 train, 5 val, 5 test subjects
+Loading data for subjects: ['Patient_013', 'Patient_019', 'Patient_012', 'Patient_006', 'Patient_009', 'Patient_001', 'Patient_015', 'Patient_004', 'Patient_008', 'Patient_014'] from ./processed_data/epilepsy_eeg\epilepsy_filter_epoch
+Loaded total 6292 epochs. Shape: (6292, 33, 512)
+Loading data for subjects: ['Patient_007', 'Patient_010', 'Patient_005', 'Patient_002', 'Patient_003'] from ./processed_data/epilepsy_eeg\epilepsy_filter_epoch
+Loaded total 1669 epochs. Shape: (1669, 33, 512)
+Loading data for subjects: ['Patient_016', 'Patient_017', 'Patient_011', 'Patient_020', 'Patient_018'] from ./processed_data/epilepsy_eeg\epilepsy_filter_epoch
+Loaded total 1774 epochs. Shape: (1774, 33, 512)
+Dataset Info: Classes=2, Channels=33, Samples/TimePoints=512
+Building HAT model...
+
+--- Exporting the best model to a CPU-only ONNX format ---
+A deep copy of the model has been created and moved to CPU for export.
+Created a dummy input tensor on CPU with shape: torch.Size([1, 33, 512])
+D:\program\onnx\dianxian\EpilepsyEEG-master\models\hat.py:26: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
+  q, k, v = qkv.permute(2, 0, 3, 1, 4)  # [3, batch, num_heads, seq_len, head_dim]
+Successfully exported CPU-only ONNX model to: experiment_outputs\onnx_models_cpu\epilepsy_eeg_epilepsy_filter_epoch_HAT_seed669_cpu.onnx
+Evaluating on Test Set...
+Evaluating on Test Set...
+Test Loss: 0.7402 | Test Acc: 28.47%
+Test Metrics: {'accuracy': 0.2846674182638106, 'f1_macro': 0.22266999300777776, 'f1_weighted': 0.12763202375302085, 'kappa': 0.0008929451122792198, 'specificity': 1.0, 'sensitivity': 0.0015735641227380016, 'auc': np.float64(0.43909164994298566)}
+Epoch: 001/100 | Time: 7.94s | LR: 1.0e-04 | Train Loss: 0.6391 | Train Acc: 63.35% | Val Loss: 0.9882 | Val Acc: 25.64%
+Epoch: 002/100 | Time: 7.88s | LR: 1.0e-04 | Train Loss: 0.4395 | Train Acc: 76.68% | Val Loss: 1.5351 | Val Acc: 46.79%
+Epoch: 003/100 | Time: 7.93s | LR: 1.0e-04 | Train Loss: 0.3184 | Train Acc: 82.84% | Val Loss: 1.7466 | Val Acc: 53.33%
+Epoch: 004/100 | Time: 7.86s | LR: 1.0e-04 | Train Loss: 0.2535 | Train Acc: 86.36% | Val Loss: 2.0284 | Val Acc: 53.45%
+Epoch: 005/100 | Time: 7.88s | LR: 1.0e-04 | Train Loss: 0.2190 | Train Acc: 88.27% | Val Loss: 2.2083 | Val Acc: 54.22%
+Epoch: 006/100 | Time: 7.88s | LR: 1.0e-04 | Train Loss: 0.1786 | Train Acc: 91.08% | Val Loss: 2.3429 | Val Acc: 51.41%
+Epoch: 007/100 | Time: 7.88s | LR: 1.0e-04 | Train Loss: 0.1516 | Train Acc: 92.55% | Val Loss: 2.1679 | Val Acc: 52.19%
+Early stopping triggered at epoch 7 (Patience: 2)
+Training finished. Total time: 55.24s
+Best Validation Accuracy: 54.22% at epoch 5
+
+--- Exporting the best model to a CPU-only ONNX format ---
+A deep copy of the model has been created and moved to CPU for export.
+Created a dummy input tensor on CPU with shape: torch.Size([1, 33, 512])
+D:\program\onnx\dianxian\EpilepsyEEG-master\models\hat.py:26: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
+  q, k, v = qkv.permute(2, 0, 3, 1, 4)  # [3, batch, num_heads, seq_len, head_dim]
+Successfully exported CPU-only ONNX model to: experiment_outputs\onnx_models_cpu\epilepsy_eeg_epilepsy_filter_epoch_HAT_seed669_cpu.onnx
+Evaluating on Test Set...
+Evaluating on Test Set...
+Test Loss: 0.9658 | Test Acc: 70.29%
+Test Metrics: {'accuracy': 0.7029312288613303, 'f1_macro': 0.6899493152770182, 'f1_weighted': 0.71741518203391, 'kappa': 0.41189029645221065, 'specificity': 0.878727634194831, 'sensitivity': 0.6333595594020456, 'auc': np.float64(0.8258302271344397)}
+Evaluating on Test Set...
+Test Loss: 0.9658 | Test Acc: 70.29%
+Test Metrics: {'accuracy': 0.7029312288613303, 'f1_macro': 0.6899493152770182, 'f1_weighted': 0.71741518203391, 'kappa': 0.41189029645221065, 'specificity': 0.878727634194831, 'sensitivity': 0.6333595594020456, 'auc': np.float64(0.8258302271344397)}
+
+--- Run 5/5 (Seed: 670) ---
+Random seed set to 670
+
+--- Running Exp: Data=epilepsy_eeg, Preprocess=epilepsy_filter_epoch, Model=HAT, Seed=670 ---
+Random seed set to 670
+Data split: 10 train, 5 val, 5 test subjects
+Loading data for subjects: ['Patient_013', 'Patient_019', 'Patient_012', 'Patient_006', 'Patient_009', 'Patient_001', 'Patient_015', 'Patient_004', 'Patient_008', 'Patient_014'] from ./processed_data/epilepsy_eeg\epilepsy_filter_epoch
+Loaded total 6292 epochs. Shape: (6292, 33, 512)
+Loading data for subjects: ['Patient_007', 'Patient_010', 'Patient_005', 'Patient_002', 'Patient_003'] from ./processed_data/epilepsy_eeg\epilepsy_filter_epoch
+Loaded total 1669 epochs. Shape: (1669, 33, 512)
+Loading data for subjects: ['Patient_016', 'Patient_017', 'Patient_011', 'Patient_020', 'Patient_018'] from ./processed_data/epilepsy_eeg\epilepsy_filter_epoch
+Loaded total 1774 epochs. Shape: (1774, 33, 512)
+Dataset Info: Classes=2, Channels=33, Samples/TimePoints=512
+Building HAT model...
+
+--- Exporting the best model to a CPU-only ONNX format ---
+A deep copy of the model has been created and moved to CPU for export.
+Created a dummy input tensor on CPU with shape: torch.Size([1, 33, 512])
+D:\program\onnx\dianxian\EpilepsyEEG-master\models\hat.py:26: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
+  q, k, v = qkv.permute(2, 0, 3, 1, 4)  # [3, batch, num_heads, seq_len, head_dim]
+Successfully exported CPU-only ONNX model to: experiment_outputs\onnx_models_cpu\epilepsy_eeg_epilepsy_filter_epoch_HAT_seed670_cpu.onnx
+Evaluating on Test Set...
+Evaluating on Test Set...
+Test Loss: 0.6837 | Test Acc: 70.29%
+Test Metrics: {'accuracy': 0.7029312288613303, 'f1_macro': 0.41277722608407813, 'f1_weighted': 0.5914767241858662, 'kappa': -0.02650990278384735, 'specificity': 0.0, 'sensitivity': 0.981117230527144, 'auc': np.float64(0.4881489974394389)}
+Epoch: 001/100 | Time: 7.88s | LR: 1.0e-04 | Train Loss: 0.6392 | Train Acc: 62.30% | Val Loss: 1.1479 | Val Acc: 10.25%
+Epoch: 002/100 | Time: 7.87s | LR: 1.0e-04 | Train Loss: 0.4318 | Train Acc: 77.24% | Val Loss: 1.4181 | Val Acc: 45.42%
+Epoch: 003/100 | Time: 7.86s | LR: 1.0e-04 | Train Loss: 0.3128 | Train Acc: 82.58% | Val Loss: 1.7122 | Val Acc: 55.12%
+Epoch: 004/100 | Time: 7.87s | LR: 1.0e-04 | Train Loss: 0.2546 | Train Acc: 86.35% | Val Loss: 2.0325 | Val Acc: 54.88%
+Epoch: 005/100 | Time: 7.86s | LR: 1.0e-04 | Train Loss: 0.2334 | Train Acc: 86.98% | Val Loss: 2.1881 | Val Acc: 54.70%
+Early stopping triggered at epoch 5 (Patience: 2)
+Training finished. Total time: 39.34s
+Best Validation Accuracy: 55.12% at epoch 3
+
+--- Exporting the best model to a CPU-only ONNX format ---
+A deep copy of the model has been created and moved to CPU for export.
+Created a dummy input tensor on CPU with shape: torch.Size([1, 33, 512])
+D:\program\onnx\dianxian\EpilepsyEEG-master\models\hat.py:26: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
+  q, k, v = qkv.permute(2, 0, 3, 1, 4)  # [3, batch, num_heads, seq_len, head_dim]
+Successfully exported CPU-only ONNX model to: experiment_outputs\onnx_models_cpu\epilepsy_eeg_epilepsy_filter_epoch_HAT_seed670_cpu.onnx
+Evaluating on Test Set...
+Evaluating on Test Set...
+Test Loss: 0.4574 | Test Acc: 75.82%
+Test Metrics: {'accuracy': 0.758173618940248, 'f1_macro': 0.7404970902309709, 'f1_weighted': 0.7698179845046746, 'kappa': 0.4969508204956684, 'specificity': 0.8767395626242545, 'sensitivity': 0.7112509834775768, 'auc': np.float64(0.8785602670366471)}
+Evaluating on Test Set...
+Test Loss: 0.4574 | Test Acc: 75.82%
+Test Metrics: {'accuracy': 0.758173618940248, 'f1_macro': 0.7404970902309709, 'f1_weighted': 0.7698179845046746, 'kappa': 0.4969508204956684, 'specificity': 0.8767395626242545, 'sensitivity': 0.7112509834775768, 'auc': np.float64(0.8785602670366471)}
+
+--- Statistics Across 5 Runs ---
+train_acc      : 88.11 ± 4.12
+valid_acc      : 59.74 ± 10.01
+test_acc       : 70.69 ± 4.40
+train_loss     : 0.2223 ± 0.0702
+valid_loss     : 1.8294 ± 0.4539
+test_loss      : 0.8426 ± 0.2010
+f1_macro       : 68.52 ± 3.35
+f1_weighted    : 71.72 ± 4.01
+kappa          : 40.22 ± 5.30
+auc            : 83.95 ± 3.57
+total_time     : 60.10s ± 25.98s
+best_epoch     : 5.60 ± 3.26
+----------------------------------
+
+| Dataset: epilepsy_eeg    | Preprocessing: epilepsy_filter_epoch | Method: HAT             | Test Acc: 70.69 ± 4.40    | Test F1m: 68.52 ± 3.35    | Time: 60.10 ± 25.98   |
+===== Finished Benchmark for: Data=epilepsy_eeg, Preprocess=epilepsy_filter_epoch, Model=HAT =====
+
+===== Starting Benchmark for: Data=epilepsy_eeg, Preprocess=epilepsy_nofilter_epoch, Model=HAT =====
+
+--- Run 1/5 (Seed: 666) ---
+Random seed set to 666
+
+--- Running Exp: Data=epilepsy_eeg, Preprocess=epilepsy_nofilter_epoch, Model=HAT, Seed=666 ---
+Random seed set to 666
+Data split: 10 train, 5 val, 5 test subjects
+Loading data for subjects: ['Patient_013', 'Patient_019', 'Patient_012', 'Patient_006', 'Patient_009', 'Patient_001', 'Patient_015', 'Patient_004', 'Patient_008', 'Patient_014'] from ./processed_data/epilepsy_eeg\epilepsy_nofilter_epoch
+Loaded total 4724 epochs. Shape: (4724, 33, 512)
+Loading data for subjects: ['Patient_007', 'Patient_010', 'Patient_005', 'Patient_002', 'Patient_003'] from ./processed_data/epilepsy_eeg\epilepsy_nofilter_epoch
+Loaded total 1252 epochs. Shape: (1252, 33, 512)
+Loading data for subjects: ['Patient_016', 'Patient_017', 'Patient_011', 'Patient_020', 'Patient_018'] from ./processed_data/epilepsy_eeg\epilepsy_nofilter_epoch
+Loaded total 1332 epochs. Shape: (1332, 33, 512)
+Dataset Info: Classes=2, Channels=33, Samples/TimePoints=512
+Building HAT model...
+
+--- Exporting the best model to a CPU-only ONNX format ---
+A deep copy of the model has been created and moved to CPU for export.
+Created a dummy input tensor on CPU with shape: torch.Size([1, 33, 512])
+D:\program\onnx\dianxian\EpilepsyEEG-master\models\hat.py:26: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
+  q, k, v = qkv.permute(2, 0, 3, 1, 4)  # [3, batch, num_heads, seq_len, head_dim]
+Successfully exported CPU-only ONNX model to: experiment_outputs\onnx_models_cpu\epilepsy_eeg_epilepsy_nofilter_epoch_HAT_seed666_cpu.onnx
+Evaluating on Test Set...
+Evaluating on Test Set...
+Test Loss: 0.7098 | Test Acc: 35.96%
+Test Metrics: {'accuracy': 0.35960960960960964, 'f1_macro': 0.3352465102074129, 'f1_weighted': 0.28021456802833344, 'kappa': 0.05307530753075307, 'specificity': 0.9708994708994709, 'sensitivity': 0.11740041928721175, 'auc': np.float64(0.503471875589276)}
+Epoch: 001/100 | Time: 5.92s | LR: 1.0e-04 | Train Loss: 0.6377 | Train Acc: 63.95% | Val Loss: 0.8910 | Val Acc: 32.99%
+Epoch: 002/100 | Time: 5.92s | LR: 1.0e-04 | Train Loss: 0.5666 | Train Acc: 69.81% | Val Loss: 1.2729 | Val Acc: 31.95%
+Epoch: 003/100 | Time: 5.92s | LR: 1.0e-04 | Train Loss: 0.4320 | Train Acc: 76.35% | Val Loss: 1.4449 | Val Acc: 40.02%
+Epoch: 004/100 | Time: 5.91s | LR: 1.0e-04 | Train Loss: 0.3361 | Train Acc: 81.96% | Val Loss: 1.4453 | Val Acc: 49.12%
+Epoch: 005/100 | Time: 5.91s | LR: 1.0e-04 | Train Loss: 0.2862 | Train Acc: 84.50% | Val Loss: 1.6449 | Val Acc: 50.64%
+Epoch: 006/100 | Time: 5.91s | LR: 1.0e-04 | Train Loss: 0.2610 | Train Acc: 86.16% | Val Loss: 1.7429 | Val Acc: 54.95%
+Epoch: 007/100 | Time: 5.92s | LR: 1.0e-04 | Train Loss: 0.2449 | Train Acc: 86.45% | Val Loss: 1.9744 | Val Acc: 54.95%
+Epoch: 008/100 | Time: 5.91s | LR: 1.0e-04 | Train Loss: 0.2263 | Train Acc: 88.12% | Val Loss: 2.1012 | Val Acc: 52.40%
+Early stopping triggered at epoch 8 (Patience: 2)
+Training finished. Total time: 47.32s
+Best Validation Accuracy: 54.95% at epoch 6
+
+--- Exporting the best model to a CPU-only ONNX format ---
+A deep copy of the model has been created and moved to CPU for export.
+Created a dummy input tensor on CPU with shape: torch.Size([1, 33, 512])
+D:\program\onnx\dianxian\EpilepsyEEG-master\models\hat.py:26: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
+  q, k, v = qkv.permute(2, 0, 3, 1, 4)  # [3, batch, num_heads, seq_len, head_dim]
+Successfully exported CPU-only ONNX model to: experiment_outputs\onnx_models_cpu\epilepsy_eeg_epilepsy_nofilter_epoch_HAT_seed666_cpu.onnx
+Evaluating on Test Set...
+Evaluating on Test Set...
+Test Loss: 0.3860 | Test Acc: 86.64%
+Test Metrics: {'accuracy': 0.8663663663663663, 'f1_macro': 0.8317761783670874, 'f1_weighted': 0.8647628477173932, 'kappa': 0.6637394056979475, 'specificity': 0.7275132275132276, 'sensitivity': 0.9213836477987422, 'auc': np.float64(0.8857386886736992)}
+Evaluating on Test Set...
+Test Loss: 0.3860 | Test Acc: 86.64%
+Test Metrics: {'accuracy': 0.8663663663663663, 'f1_macro': 0.8317761783670874, 'f1_weighted': 0.8647628477173932, 'kappa': 0.6637394056979475, 'specificity': 0.7275132275132276, 'sensitivity': 0.9213836477987422, 'auc': np.float64(0.8857386886736992)}
+
+--- Run 2/5 (Seed: 667) ---
+Random seed set to 667
+
+--- Running Exp: Data=epilepsy_eeg, Preprocess=epilepsy_nofilter_epoch, Model=HAT, Seed=667 ---
+Random seed set to 667
+Data split: 10 train, 5 val, 5 test subjects
+Loading data for subjects: ['Patient_013', 'Patient_019', 'Patient_012', 'Patient_006', 'Patient_009', 'Patient_001', 'Patient_015', 'Patient_004', 'Patient_008', 'Patient_014'] from ./processed_data/epilepsy_eeg\epilepsy_nofilter_epoch
+Loaded total 4724 epochs. Shape: (4724, 33, 512)
+Loading data for subjects: ['Patient_007', 'Patient_010', 'Patient_005', 'Patient_002', 'Patient_003'] from ./processed_data/epilepsy_eeg\epilepsy_nofilter_epoch
+Loaded total 1252 epochs. Shape: (1252, 33, 512)
+Loading data for subjects: ['Patient_016', 'Patient_017', 'Patient_011', 'Patient_020', 'Patient_018'] from ./processed_data/epilepsy_eeg\epilepsy_nofilter_epoch
+Loaded total 1332 epochs. Shape: (1332, 33, 512)
+Dataset Info: Classes=2, Channels=33, Samples/TimePoints=512
+Building HAT model...
+
+--- Exporting the best model to a CPU-only ONNX format ---
+A deep copy of the model has been created and moved to CPU for export.
+Created a dummy input tensor on CPU with shape: torch.Size([1, 33, 512])
+D:\program\onnx\dianxian\EpilepsyEEG-master\models\hat.py:26: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
+  q, k, v = qkv.permute(2, 0, 3, 1, 4)  # [3, batch, num_heads, seq_len, head_dim]
+Successfully exported CPU-only ONNX model to: experiment_outputs\onnx_models_cpu\epilepsy_eeg_epilepsy_nofilter_epoch_HAT_seed667_cpu.onnx
+Evaluating on Test Set...
+Evaluating on Test Set...
+Test Loss: 0.7705 | Test Acc: 28.38%
+Test Metrics: {'accuracy': 0.28378378378378377, 'f1_macro': 0.22105263157894736, 'f1_weighted': 0.12546230440967282, 'kappa': 0.0, 'specificity': 1.0, 'sensitivity': 0.0, 'auc': np.float64(0.48095598593502153)}
+Epoch: 001/100 | Time: 5.92s | LR: 1.0e-04 | Train Loss: 0.6437 | Train Acc: 63.42% | Val Loss: 1.0197 | Val Acc: 27.16%
+Epoch: 002/100 | Time: 5.92s | LR: 1.0e-04 | Train Loss: 0.5389 | Train Acc: 71.10% | Val Loss: 1.3567 | Val Acc: 23.48%
+Epoch: 003/100 | Time: 5.92s | LR: 1.0e-04 | Train Loss: 0.3745 | Train Acc: 80.19% | Val Loss: 1.5625 | Val Acc: 42.25%
+Epoch: 004/100 | Time: 5.91s | LR: 1.0e-04 | Train Loss: 0.3092 | Train Acc: 83.15% | Val Loss: 1.7198 | Val Acc: 52.24%
+Epoch: 005/100 | Time: 5.92s | LR: 1.0e-04 | Train Loss: 0.2712 | Train Acc: 85.39% | Val Loss: 1.8845 | Val Acc: 49.76%
+Epoch: 006/100 | Time: 5.92s | LR: 1.0e-04 | Train Loss: 0.2517 | Train Acc: 86.20% | Val Loss: 1.9763 | Val Acc: 46.88%
+Early stopping triggered at epoch 6 (Patience: 2)
+Training finished. Total time: 35.51s
+Best Validation Accuracy: 52.24% at epoch 4
+
+--- Exporting the best model to a CPU-only ONNX format ---
+A deep copy of the model has been created and moved to CPU for export.
+Created a dummy input tensor on CPU with shape: torch.Size([1, 33, 512])
+D:\program\onnx\dianxian\EpilepsyEEG-master\models\hat.py:26: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
+  q, k, v = qkv.permute(2, 0, 3, 1, 4)  # [3, batch, num_heads, seq_len, head_dim]
+Successfully exported CPU-only ONNX model to: experiment_outputs\onnx_models_cpu\epilepsy_eeg_epilepsy_nofilter_epoch_HAT_seed667_cpu.onnx
+Evaluating on Test Set...
+Evaluating on Test Set...
+Test Loss: 0.3681 | Test Acc: 88.36%
+Test Metrics: {'accuracy': 0.8836336336336337, 'f1_macro': 0.8446892619241951, 'f1_weighted': 0.8783203835203519, 'kappa': 0.6913015394552697, 'specificity': 0.6746031746031746, 'sensitivity': 0.9664570230607966, 'auc': np.float64(0.8900508025245971)}
+Evaluating on Test Set...
+Test Loss: 0.3681 | Test Acc: 88.36%
+Test Metrics: {'accuracy': 0.8836336336336337, 'f1_macro': 0.8446892619241951, 'f1_weighted': 0.8783203835203519, 'kappa': 0.6913015394552697, 'specificity': 0.6746031746031746, 'sensitivity': 0.9664570230607966, 'auc': np.float64(0.8900508025245971)}
+
+--- Run 3/5 (Seed: 668) ---
+Random seed set to 668
+
+--- Running Exp: Data=epilepsy_eeg, Preprocess=epilepsy_nofilter_epoch, Model=HAT, Seed=668 ---
+Random seed set to 668
+Data split: 10 train, 5 val, 5 test subjects
+Loading data for subjects: ['Patient_013', 'Patient_019', 'Patient_012', 'Patient_006', 'Patient_009', 'Patient_001', 'Patient_015', 'Patient_004', 'Patient_008', 'Patient_014'] from ./processed_data/epilepsy_eeg\epilepsy_nofilter_epoch
+Loaded total 4724 epochs. Shape: (4724, 33, 512)
+Loading data for subjects: ['Patient_007', 'Patient_010', 'Patient_005', 'Patient_002', 'Patient_003'] from ./processed_data/epilepsy_eeg\epilepsy_nofilter_epoch
+Loaded total 1252 epochs. Shape: (1252, 33, 512)
+Loading data for subjects: ['Patient_016', 'Patient_017', 'Patient_011', 'Patient_020', 'Patient_018'] from ./processed_data/epilepsy_eeg\epilepsy_nofilter_epoch
+Loaded total 1332 epochs. Shape: (1332, 33, 512)
+Dataset Info: Classes=2, Channels=33, Samples/TimePoints=512
+Building HAT model...
+
+--- Exporting the best model to a CPU-only ONNX format ---
+A deep copy of the model has been created and moved to CPU for export.
+Created a dummy input tensor on CPU with shape: torch.Size([1, 33, 512])
+D:\program\onnx\dianxian\EpilepsyEEG-master\models\hat.py:26: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
+  q, k, v = qkv.permute(2, 0, 3, 1, 4)  # [3, batch, num_heads, seq_len, head_dim]
+Successfully exported CPU-only ONNX model to: experiment_outputs\onnx_models_cpu\epilepsy_eeg_epilepsy_nofilter_epoch_HAT_seed668_cpu.onnx
+Evaluating on Test Set...
+Evaluating on Test Set...
+Test Loss: 0.9031 | Test Acc: 28.90%
+Test Metrics: {'accuracy': 0.28903903903903905, 'f1_macro': 0.22924532394629543, 'f1_weighted': 0.13641195496133499, 'kappa': 0.004177797987836018, 'specificity': 1.0, 'sensitivity': 0.007337526205450734, 'auc': np.float64(0.6111915299546327)}
+Epoch: 001/100 | Time: 5.92s | LR: 1.0e-04 | Train Loss: 0.6424 | Train Acc: 64.86% | Val Loss: 0.9575 | Val Acc: 27.40%
+Epoch: 002/100 | Time: 5.92s | LR: 1.0e-04 | Train Loss: 0.5681 | Train Acc: 69.67% | Val Loss: 1.1382 | Val Acc: 33.15%
+Epoch: 003/100 | Time: 5.92s | LR: 1.0e-04 | Train Loss: 0.3892 | Train Acc: 79.55% | Val Loss: 1.3976 | Val Acc: 40.02%
+Epoch: 004/100 | Time: 5.92s | LR: 1.0e-04 | Train Loss: 0.3273 | Train Acc: 82.56% | Val Loss: 1.6966 | Val Acc: 46.57%
+Epoch: 005/100 | Time: 5.93s | LR: 1.0e-04 | Train Loss: 0.2932 | Train Acc: 83.91% | Val Loss: 1.7303 | Val Acc: 48.72%
+Epoch: 006/100 | Time: 5.92s | LR: 1.0e-04 | Train Loss: 0.2624 | Train Acc: 86.09% | Val Loss: 1.8585 | Val Acc: 55.11%
+Epoch: 007/100 | Time: 5.91s | LR: 1.0e-04 | Train Loss: 0.2399 | Train Acc: 87.11% | Val Loss: 2.0785 | Val Acc: 44.65%
+Epoch: 008/100 | Time: 5.92s | LR: 1.0e-04 | Train Loss: 0.2200 | Train Acc: 88.70% | Val Loss: 2.1983 | Val Acc: 52.08%
+Early stopping triggered at epoch 8 (Patience: 2)
+Training finished. Total time: 47.34s
+Best Validation Accuracy: 55.11% at epoch 6
+
+--- Exporting the best model to a CPU-only ONNX format ---
+A deep copy of the model has been created and moved to CPU for export.
+Created a dummy input tensor on CPU with shape: torch.Size([1, 33, 512])
+D:\program\onnx\dianxian\EpilepsyEEG-master\models\hat.py:26: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
+  q, k, v = qkv.permute(2, 0, 3, 1, 4)  # [3, batch, num_heads, seq_len, head_dim]
+Successfully exported CPU-only ONNX model to: experiment_outputs\onnx_models_cpu\epilepsy_eeg_epilepsy_nofilter_epoch_HAT_seed668_cpu.onnx
+Evaluating on Test Set...
+Evaluating on Test Set...
+Test Loss: 0.5628 | Test Acc: 76.50%
+Test Metrics: {'accuracy': 0.765015015015015, 'f1_macro': 0.7483265170608031, 'f1_weighted': 0.7763515165407624, 'kappa': 0.5126251998989984, 'specificity': 0.8941798941798942, 'sensitivity': 0.7138364779874213, 'auc': np.float64(0.8861213714463191)}
+Evaluating on Test Set...
+Test Loss: 0.5628 | Test Acc: 76.50%
+Test Metrics: {'accuracy': 0.765015015015015, 'f1_macro': 0.7483265170608031, 'f1_weighted': 0.7763515165407624, 'kappa': 0.5126251998989984, 'specificity': 0.8941798941798942, 'sensitivity': 0.7138364779874213, 'auc': np.float64(0.8861213714463191)}
+
+--- Run 4/5 (Seed: 669) ---
+Random seed set to 669
+
+--- Running Exp: Data=epilepsy_eeg, Preprocess=epilepsy_nofilter_epoch, Model=HAT, Seed=669 ---
+Random seed set to 669
+Data split: 10 train, 5 val, 5 test subjects
+Loading data for subjects: ['Patient_013', 'Patient_019', 'Patient_012', 'Patient_006', 'Patient_009', 'Patient_001', 'Patient_015', 'Patient_004', 'Patient_008', 'Patient_014'] from ./processed_data/epilepsy_eeg\epilepsy_nofilter_epoch
+Loaded total 4724 epochs. Shape: (4724, 33, 512)
+Loading data for subjects: ['Patient_007', 'Patient_010', 'Patient_005', 'Patient_002', 'Patient_003'] from ./processed_data/epilepsy_eeg\epilepsy_nofilter_epoch
+Loaded total 1252 epochs. Shape: (1252, 33, 512)
+Loading data for subjects: ['Patient_016', 'Patient_017', 'Patient_011', 'Patient_020', 'Patient_018'] from ./processed_data/epilepsy_eeg\epilepsy_nofilter_epoch
+Loaded total 1332 epochs. Shape: (1332, 33, 512)
+Dataset Info: Classes=2, Channels=33, Samples/TimePoints=512
+Building HAT model...
+
+--- Exporting the best model to a CPU-only ONNX format ---
+A deep copy of the model has been created and moved to CPU for export.
+Created a dummy input tensor on CPU with shape: torch.Size([1, 33, 512])
+D:\program\onnx\dianxian\EpilepsyEEG-master\models\hat.py:26: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
+  q, k, v = qkv.permute(2, 0, 3, 1, 4)  # [3, batch, num_heads, seq_len, head_dim]
+Successfully exported CPU-only ONNX model to: experiment_outputs\onnx_models_cpu\epilepsy_eeg_epilepsy_nofilter_epoch_HAT_seed669_cpu.onnx
+Evaluating on Test Set...
+Evaluating on Test Set...
+Test Loss: 0.7748 | Test Acc: 29.20%
+Test Metrics: {'accuracy': 0.29204204204204204, 'f1_macro': 0.23388277773881008, 'f1_weighted': 0.14260284248360136, 'kappa': 0.00657707419850817, 'specificity': 1.0, 'sensitivity': 0.011530398322851153, 'auc': np.float64(0.49499323372488996)}
+Epoch: 001/100 | Time: 5.92s | LR: 1.0e-04 | Train Loss: 0.6236 | Train Acc: 65.16% | Val Loss: 0.9816 | Val Acc: 30.43%
+Epoch: 002/100 | Time: 6.08s | LR: 1.0e-04 | Train Loss: 0.4884 | Train Acc: 74.17% | Val Loss: 1.3986 | Val Acc: 34.58%
+Epoch: 003/100 | Time: 6.03s | LR: 1.0e-04 | Train Loss: 0.3595 | Train Acc: 81.33% | Val Loss: 1.7196 | Val Acc: 37.38%
+Epoch: 004/100 | Time: 5.90s | LR: 1.0e-04 | Train Loss: 0.3181 | Train Acc: 82.85% | Val Loss: 1.6232 | Val Acc: 48.56%
+Epoch: 005/100 | Time: 5.90s | LR: 1.0e-04 | Train Loss: 0.2864 | Train Acc: 84.57% | Val Loss: 1.7198 | Val Acc: 47.44%
+Epoch: 006/100 | Time: 5.91s | LR: 1.0e-04 | Train Loss: 0.2602 | Train Acc: 85.22% | Val Loss: 1.8495 | Val Acc: 64.22%
+Epoch: 007/100 | Time: 5.91s | LR: 1.0e-04 | Train Loss: 0.2398 | Train Acc: 87.13% | Val Loss: 2.0323 | Val Acc: 61.90%
+Epoch: 008/100 | Time: 5.98s | LR: 1.0e-04 | Train Loss: 0.2209 | Train Acc: 88.25% | Val Loss: 2.1068 | Val Acc: 50.80%
+Early stopping triggered at epoch 8 (Patience: 2)
+Training finished. Total time: 47.63s
+Best Validation Accuracy: 64.22% at epoch 6
+
+--- Exporting the best model to a CPU-only ONNX format ---
+A deep copy of the model has been created and moved to CPU for export.
+Created a dummy input tensor on CPU with shape: torch.Size([1, 33, 512])
+D:\program\onnx\dianxian\EpilepsyEEG-master\models\hat.py:26: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
+  q, k, v = qkv.permute(2, 0, 3, 1, 4)  # [3, batch, num_heads, seq_len, head_dim]
+Successfully exported CPU-only ONNX model to: experiment_outputs\onnx_models_cpu\epilepsy_eeg_epilepsy_nofilter_epoch_HAT_seed669_cpu.onnx
+Evaluating on Test Set...
+Evaluating on Test Set...
+Test Loss: 0.6387 | Test Acc: 81.98%
+Test Metrics: {'accuracy': 0.8198198198198198, 'f1_macro': 0.7936946774156077, 'f1_weighted': 0.8254416859068022, 'kappa': 0.5901412351149267, 'specificity': 0.8174603174603174, 'sensitivity': 0.8207547169811321, 'auc': np.float64(0.8754201191308109)}
+Evaluating on Test Set...
+Test Loss: 0.6387 | Test Acc: 81.98%
+Test Metrics: {'accuracy': 0.8198198198198198, 'f1_macro': 0.7936946774156077, 'f1_weighted': 0.8254416859068022, 'kappa': 0.5901412351149267, 'specificity': 0.8174603174603174, 'sensitivity': 0.8207547169811321, 'auc': np.float64(0.8754201191308109)}
+
+--- Run 5/5 (Seed: 670) ---
+Random seed set to 670
+
+--- Running Exp: Data=epilepsy_eeg, Preprocess=epilepsy_nofilter_epoch, Model=HAT, Seed=670 ---
+Random seed set to 670
+Data split: 10 train, 5 val, 5 test subjects
+Loading data for subjects: ['Patient_013', 'Patient_019', 'Patient_012', 'Patient_006', 'Patient_009', 'Patient_001', 'Patient_015', 'Patient_004', 'Patient_008', 'Patient_014'] from ./processed_data/epilepsy_eeg\epilepsy_nofilter_epoch
+Loaded total 4724 epochs. Shape: (4724, 33, 512)
+Loading data for subjects: ['Patient_007', 'Patient_010', 'Patient_005', 'Patient_002', 'Patient_003'] from ./processed_data/epilepsy_eeg\epilepsy_nofilter_epoch
+Loaded total 1252 epochs. Shape: (1252, 33, 512)
+Loading data for subjects: ['Patient_016', 'Patient_017', 'Patient_011', 'Patient_020', 'Patient_018'] from ./processed_data/epilepsy_eeg\epilepsy_nofilter_epoch
+Loaded total 1332 epochs. Shape: (1332, 33, 512)
+Dataset Info: Classes=2, Channels=33, Samples/TimePoints=512
+Building HAT model...
+
+--- Exporting the best model to a CPU-only ONNX format ---
+A deep copy of the model has been created and moved to CPU for export.
+Created a dummy input tensor on CPU with shape: torch.Size([1, 33, 512])
+D:\program\onnx\dianxian\EpilepsyEEG-master\models\hat.py:26: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
+  q, k, v = qkv.permute(2, 0, 3, 1, 4)  # [3, batch, num_heads, seq_len, head_dim]
+Successfully exported CPU-only ONNX model to: experiment_outputs\onnx_models_cpu\epilepsy_eeg_epilepsy_nofilter_epoch_HAT_seed670_cpu.onnx
+Evaluating on Test Set...
+Evaluating on Test Set...
+Test Loss: 0.7126 | Test Acc: 33.41%
+Test Metrics: {'accuracy': 0.3340840840840841, 'f1_macro': 0.2962091279010545, 'f1_weighted': 0.22560726783171786, 'kappa': 0.04021173305258219, 'specificity': 0.9973544973544973, 'sensitivity': 0.07127882599580712, 'auc': np.float64(0.5488502878439986)}
+Epoch: 001/100 | Time: 5.96s | LR: 1.0e-04 | Train Loss: 0.6312 | Train Acc: 64.27% | Val Loss: 1.0771 | Val Acc: 27.88%
+Epoch: 002/100 | Time: 5.91s | LR: 1.0e-04 | Train Loss: 0.4990 | Train Acc: 73.73% | Val Loss: 1.3279 | Val Acc: 37.78%
+Epoch: 003/100 | Time: 5.92s | LR: 1.0e-04 | Train Loss: 0.3567 | Train Acc: 81.80% | Val Loss: 1.3938 | Val Acc: 42.25%
+Epoch: 004/100 | Time: 5.91s | LR: 1.0e-04 | Train Loss: 0.3090 | Train Acc: 82.96% | Val Loss: 1.6586 | Val Acc: 48.48%
+Epoch: 005/100 | Time: 5.92s | LR: 1.0e-04 | Train Loss: 0.2730 | Train Acc: 85.06% | Val Loss: 1.7610 | Val Acc: 49.76%
+Epoch: 006/100 | Time: 5.91s | LR: 1.0e-04 | Train Loss: 0.2583 | Train Acc: 86.07% | Val Loss: 1.8845 | Val Acc: 60.14%
+Epoch: 007/100 | Time: 5.91s | LR: 1.0e-04 | Train Loss: 0.2393 | Train Acc: 87.79% | Val Loss: 2.1488 | Val Acc: 45.37%
+Epoch: 008/100 | Time: 5.91s | LR: 1.0e-04 | Train Loss: 0.2215 | Train Acc: 88.67% | Val Loss: 2.2348 | Val Acc: 51.84%
+Early stopping triggered at epoch 8 (Patience: 2)
+Training finished. Total time: 47.35s
+Best Validation Accuracy: 60.14% at epoch 6
+
+--- Exporting the best model to a CPU-only ONNX format ---
+A deep copy of the model has been created and moved to CPU for export.
+Created a dummy input tensor on CPU with shape: torch.Size([1, 33, 512])
+D:\program\onnx\dianxian\EpilepsyEEG-master\models\hat.py:26: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
+  q, k, v = qkv.permute(2, 0, 3, 1, 4)  # [3, batch, num_heads, seq_len, head_dim]
+Successfully exported CPU-only ONNX model to: experiment_outputs\onnx_models_cpu\epilepsy_eeg_epilepsy_nofilter_epoch_HAT_seed670_cpu.onnx
+Evaluating on Test Set...
+Evaluating on Test Set...
+Test Loss: 0.5467 | Test Acc: 83.86%
+Test Metrics: {'accuracy': 0.8385885885885885, 'f1_macro': 0.8168390635882736, 'f1_weighted': 0.8441325851572964, 'kappa': 0.6368574819684105, 'specificity': 0.8703703703703703, 'sensitivity': 0.8259958071278826, 'auc': np.float64(0.8885810788326511)}
+Evaluating on Test Set...
+Test Loss: 0.5467 | Test Acc: 83.86%
+Test Metrics: {'accuracy': 0.8385885885885885, 'f1_macro': 0.8168390635882736, 'f1_weighted': 0.8441325851572964, 'kappa': 0.6368574819684105, 'specificity': 0.8703703703703703, 'sensitivity': 0.8259958071278826, 'auc': np.float64(0.8885810788326511)}
+
+--- Statistics Across 5 Runs ---
+train_acc      : 85.34 ± 1.15
+valid_acc      : 57.33 ± 4.29
+test_acc       : 83.47 ± 4.12
+train_loss     : 0.2702 ± 0.0195
+valid_loss     : 1.8110 ± 0.0665
+test_loss      : 0.5005 ± 0.1056
+f1_macro       : 80.71 ± 3.39
+f1_weighted    : 83.78 ± 3.56
+kappa          : 61.89 ± 6.28
+auc            : 88.52 ± 0.51
+total_time     : 45.03s ± 4.76s
+best_epoch     : 5.60 ± 0.80
+----------------------------------
+
+| Dataset: epilepsy_eeg    | Preprocessing: epilepsy_nofilter_epoch | Method: HAT             | Test Acc: 83.47 ± 4.12    | Test F1m: 80.71 ± 3.39    | Time: 45.03 ± 4.76    |
+===== Finished Benchmark for: Data=epilepsy_eeg, Preprocess=epilepsy_nofilter_epoch, Model=HAT =====
+
+--- Benchmark Run Complete ---
+Results saved in log directory: ./log/2025-07-08_17-36-24*
+
+Process finished with exit code 0

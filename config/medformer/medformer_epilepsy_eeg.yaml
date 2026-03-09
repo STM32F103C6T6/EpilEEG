@@ -1,0 +1,44 @@
+# config/medformer/medformer_epilepsy_eeg.yaml
+# Configuration for MedFormer model on the preprocessed epilepsy_eeg dataset
+
+# 模型超参数 (需要与 MedFormer 模型实现匹配)
+model:
+  task_name: 'classification' # 必须是 classification
+  # output_attention: False # 是否输出注意力权重
+
+  # --- 核心模型参数 ---
+  d_model: 128          # 模型主维度
+  d_ff: 256           # FeedForward 层维度 (可以设为 d_model 的 2-4 倍)
+  n_heads: 8            # 注意力头数
+  e_layers: 3           # Encoder 层数
+  dropout: 0.2          # Dropout 比例
+  activation: 'gelu'    # 激活函数
+
+  # --- Patching 相关 ---
+  # 定义不同的 Patch 长度，用逗号分隔。MedFormer 的特色在于多尺度 Patch。
+  # 需要根据您的数据特性 (n_times=512, sfreq=256Hz) 选择。
+  # 示例：使用 16个点 (约 63ms) 和 32个点 (约 125ms) 的 Patch
+  patch_len_list: "16,32"
+  # stride_list 通常与 patch_len_list 相同
+
+  # --- 其他 MedFormer 特定参数 ---
+  # augmentations: "affine,mask" # 可选的数据增强方法，逗号分隔，或留空 ""
+  augmentations: "mask"
+  single_channel: False     # False: 通道混合处理; True: 独立处理每个通道 (计算量大)
+  no_inter_attn: False      # 是否禁用 MedformerLayer 中的交互注意力
+
+# 训练过程配置
+training:
+  optimizer: 'adamw'
+  lr: 0.0001
+  weight_decay: 0.01
+  loss: 'crossentropyloss'
+  batch_size: 64       # MedFormer 可能需要比 HAT 更小的 Batch Size
+  epochs: 100          # 增加训练轮数
+  patience: 20
+  print_freq: 1
+  debug: False
+  scheduler:
+    type: 'cosineannealinglr'
+    T_max: 100
+    eta_min: 1e-6
