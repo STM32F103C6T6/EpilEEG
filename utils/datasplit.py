@@ -5,6 +5,137 @@ import os
 import numpy as np
 from sklearn.model_selection import train_test_split, StratifiedKFold, GroupKFold
 
+# utils/datasplit.py
+import numpy as np
+from sklearn.model_selection import KFold, train_test_split
+
+
+def split_by_subject_loso_mixed_val(all_subjects, fold_idx=0):
+    """
+    LOSO: Leave-One-Subject-Out
+    - test_subjects: 单个患者
+    - train_subjects: 其余所有患者
+    - val_subjects: 与 train_subjects 相同，后续在样本层面切 val
+    """
+    all_subjects = np.array(sorted(all_subjects))
+
+    n_splits = len(all_subjects)
+    if n_splits < 2:
+        raise ValueError("Need at least 2 subjects for LOSO split.")
+
+    if fold_idx < 0 or fold_idx >= n_splits:
+        raise ValueError(f"fold_idx must be in [0, {n_splits - 1}], got {fold_idx}")
+
+    test_subjects = [all_subjects[fold_idx]]
+    train_subjects = list(all_subjects[np.arange(n_splits) != fold_idx])
+    val_subjects = train_subjects.copy()
+
+    print(f"LOSO split: fold {fold_idx + 1}/{n_splits}")
+    print(f"Train subjects ({len(train_subjects)}): {train_subjects}")
+    print(f"Val subjects   ({len(val_subjects)}): {val_subjects} (sample-level split later)")
+    print(f"Test subjects  ({len(test_subjects)}): {test_subjects}")
+
+    return train_subjects, val_subjects, test_subjects
+
+
+def split_by_subject_kfold_mixed_val(all_subjects, n_splits=5, fold_idx=0,val_size=0.1, random_state=42):
+    """
+    外层按 subject 做 K 折：
+    - test_subjects: 第 fold_idx 折，保持患者独立
+    - train_subjects: 剩余所有 subjects
+    - val_subjects: 与 train_subjects 相同
+
+    说明：
+    这里 train/val 不再按患者独立划分。
+    后续应在 train_subjects 对应的数据内部，再按样本/epoch 划分 train 和 val。
+
+    Parameters
+    ----------
+    all_subjects : list
+        所有被试ID列表
+    n_splits : int
+        K折数
+    fold_idx : int
+        当前使用第几折作为测试集，范围 [0, n_splits-1]
+    random_state : int
+        随机种子
+    """
+    all_subjects = np.array(sorted(all_subjects))
+
+    if len(all_subjects) < n_splits:
+        raise ValueError(
+            f"Number of subjects ({len(all_subjects)}) is smaller than n_splits ({n_splits})."
+        )
+
+    kf = KFold(n_splits=n_splits, shuffle=True, random_state=random_state)
+    folds = list(kf.split(all_subjects))
+
+    if fold_idx < 0 or fold_idx >= n_splits:
+        raise ValueError(f"fold_idx must be in [0, {n_splits - 1}], got {fold_idx}")
+
+    train_val_idx, test_idx = folds[fold_idx]
+    train_val_subjects = all_subjects[train_val_idx]
+    test_subjects = all_subjects[test_idx]
+
+    # 关键：train 和 val 先共享同一批 subject
+    train_subjects = train_val_subjects.copy()
+    val_subjects = train_val_subjects.copy()
+
+    return list(train_subjects), list(val_subjects), list(test_subjects)
+
+def split_by_subject_kfold(all_subjects, n_splits=5, fold_idx=0, val_size=0.1, random_state=42):
+    """
+    按 subject 做 K 折划分：
+    - test_subjects: 第 fold_idx 折
+    - val_subjects: 从剩余 train_val_subjects 中再切一部分
+    - train_subjects: 剩余部分
+
+    Parameters
+    ----------
+    all_subjects : list
+        所有被试ID列表
+    n_splits : int
+        K折数
+    fold_idx : int
+        当前使用第几折作为测试集，范围 [0, n_splits-1]
+    val_size : float
+        从训练部分中划出的验证集比例
+    random_state : int
+        随机种子
+    """
+    all_subjects = np.array(sorted(all_subjects))
+
+    if len(all_subjects) < n_splits:
+        raise ValueError(
+            f"Number of subjects ({len(all_subjects)}) is smaller than n_splits ({n_splits})."
+        )
+
+    kf = KFold(n_splits=n_splits, shuffle=True, random_state=random_state)
+    folds = list(kf.split(all_subjects))
+
+    if fold_idx < 0 or fold_idx >= n_splits:
+        raise ValueError(f"fold_idx must be in [0, {n_splits - 1}], got {fold_idx}")
+
+    train_val_idx, test_idx = folds[fold_idx]
+    train_val_subjects = all_subjects[train_val_idx]
+    test_subjects = all_subjects[test_idx]
+
+    # 再从 train_val_subjects 中切出 val_subjects
+    if val_size > 0:
+        if len(train_val_subjects) < 2:
+            raise ValueError("Not enough train_val subjects to create a validation set.")
+
+        train_subjects, val_subjects = train_test_split(
+            train_val_subjects,
+            test_size=val_size,
+            random_state=random_state,
+            shuffle=True
+        )
+    else:
+        train_subjects = train_val_subjects
+        val_subjects = np.array([])
+
+    return list(train_subjects), list(val_subjects), list(test_subjects)
 
 def split_by_subject(all_subjects, test_size=0.2, val_size=0.1, random_state=42):
     """

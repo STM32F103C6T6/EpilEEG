@@ -3,7 +3,7 @@ import numpy as np
 import torch
 
 from utils.metrics import calculate_metrics
-from .Base_Predictor import BasePredictor
+from predictor.Base_Predictor  import BasePredictor
 from models.medformer import Model as MedFormerModel  # 导入修改后的 MedFormer 模型类
 
 

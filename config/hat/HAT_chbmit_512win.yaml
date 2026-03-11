@@ -49,7 +49,7 @@ training:
   loss: 'crossentropyloss' # 损失函数
   batch_size: 128       # 批大小 (根据 GPU 显存调整)
   epochs: 100          # 最大训练轮数 (需要调优)
-  patience: 10       # 早停耐心 (需要调优) 原20
+  patience: 3      # 早停耐心 (需要调优) 原20
   print_freq: 1        # 每隔多少轮打印一次信息
   debug: false
   # use_amp: True       # (可选) 如果 GPU 支持且想加速，可以开启混合精度

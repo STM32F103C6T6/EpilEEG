@@ -8,7 +8,8 @@ import importlib  # To dynamically import predictors
 from utils.tools import load_conf, setup_seed
 from utils.logger import MultiExpRecorder, ResultLogger  # Keep ResultLogger if needed here? Probably not.
 from utils.dataloader import create_dataloaders
-from utils.datasplit import split_by_subject, get_subject_list  # Example split strategy
+from utils.datasplit import split_by_subject, get_subject_list, split_by_subject_kfold, split_by_subject_kfold_mixed_val\
+    ,split_by_subject_loso_mixed_val  # Example split strategy
 import argparse
 import warnings
 import time
@@ -19,6 +20,23 @@ import torch  # <--- 如果之前没有，请添加
 import torch.onnx # <--- 添加这一行
 from utils.tools import load_conf, setup_seed
 # ... 其他导入 ...
+
+
+
+import numpy as np
+
+def infer_num_classes(dataset_conf, ds):
+    if hasattr(dataset_conf, 'n_classes'):
+        return dataset_conf.n_classes
+
+    if hasattr(ds, 'labels'):
+        labels = ds.labels
+    elif hasattr(ds, 'dataset') and hasattr(ds.dataset, 'labels'):
+        labels = ds.dataset.labels[ds.indices]
+    else:
+        raise AttributeError("Cannot infer n_classes from dataset.")
+
+    return len(np.unique(labels))
 
 def save_exp(dataset_name, preprocess_method, model_name, seed, device, args):
     """Runs a single experiment for a given configuration."""
@@ -44,34 +62,61 @@ def save_exp(dataset_name, preprocess_method, model_name, seed, device, args):
         return None
 
     # --- Data Splitting (Example: Cross-Subject) ---
+    # --- Data Splitting: Group K-Fold by Subject ---
     try:
         all_subjects = get_subject_list(processed_data_dir)
-        # Use seed for reproducible splits across runs if desired, but split should be same for same dataset/seed combo
-        split_seed = args.split_seed  # Use a fixed seed for splitting subjects
-        train_subjects, val_subjects, test_subjects = split_by_subject(
-            all_subjects,
-            test_size=getattr(dataset_conf.split, 'test_size', 0.2),
-            val_size=getattr(dataset_conf.split, 'val_size', 0.1),
-            random_state=split_seed
-        )
-        # Handle case where validation set might be empty
+        split_seed = args.split_seed
+        n_splits = args.n_splits
+        fold_idx = args.fold_idx
+
+        if getattr(args, 'loso', False):
+            train_subjects, val_subjects, test_subjects = split_by_subject_loso_mixed_val(
+                all_subjects=all_subjects,
+                fold_idx=args.fold_idx
+            )
+            n_splits = len(all_subjects)
+        elif getattr(args, 'mixed_val', False):
+            train_subjects, val_subjects, test_subjects = split_by_subject_kfold_mixed_val(
+                all_subjects=all_subjects,
+                n_splits=args.n_splits,
+                fold_idx=args.fold_idx,
+                random_state=args.split_seed
+            )
+        else:
+            train_subjects, val_subjects, test_subjects = split_by_subject_kfold(
+                all_subjects=all_subjects,
+                n_splits=args.n_splits,
+                fold_idx=args.fold_idx,
+                val_size=getattr(dataset_conf.split, 'val_size', 0.1),
+                random_state=args.split_seed
+            )
+
         if not val_subjects:
-            print("Warning: No validation subjects found. Using test set for validation during training.")
-            # Need to decide how to handle this: Use test set for validation? Skip validation?
-            # Option 1: Use test set for validation (potential data leakage for final eval)
+            print("Warning: No validation subjects found. Using test subjects as validation subjects.")
             val_subjects = test_subjects
-            # Option 2: Skip validation (rely on fixed epochs or train loss) - requires predictor modification
-            # return None # Or raise error
+
+        print(f"K-Fold split done: fold {fold_idx + 1}/{n_splits}")
+        print(f"Train subjects ({len(train_subjects)}): {train_subjects}")
+        print(f"Val subjects   ({len(val_subjects)}): {val_subjects}")
+        print(f"Test subjects  ({len(test_subjects)}): {test_subjects}")
 
     except Exception as e:
-        print(f"Error during data splitting: {e}")
+        print(f"Error during K-Fold subject splitting: {e}")
         return None
 
     # --- Create DataLoaders ---
     try:
         batch_size = model_conf.training.batch_size
         train_loader, val_loader, test_loader, train_ds, val_ds, test_ds = create_dataloaders(
-            processed_data_dir, train_subjects, val_subjects, test_subjects, batch_size, args.num_workers
+            processed_data_dir=processed_data_dir,
+            train_subjects=train_subjects,
+            val_subjects=val_subjects,
+            test_subjects=test_subjects,
+            batch_size=batch_size,
+            num_workers=args.num_workers,
+            mixed_val=getattr(args, 'mixed_val', False),
+            val_ratio=getattr(dataset_conf.split, 'val_size', 0.1),
+            split_seed=args.split_seed
         )
 
         # +++ 添加数据抽查 +++
@@ -109,7 +154,7 @@ def save_exp(dataset_name, preprocess_method, model_name, seed, device, args):
     sample_data, _ = train_ds[0]
     n_channels = sample_data.shape[-2]  # Assuming shape (..., Channels, Time)
     n_times = sample_data.shape[-1]
-    n_classes = getattr(dataset_conf, 'n_classes', len(np.unique(train_ds.labels)))  # Infer or use config
+    n_classes = infer_num_classes(dataset_conf, train_ds)  # Infer or use config
     dataset_info = {
         'n_classes': n_classes,
         'n_channels': n_channels,
@@ -202,7 +247,7 @@ def save_exp(dataset_name, preprocess_method, model_name, seed, device, args):
 
         # 现在可以安全地在 GPU 上继续执行测试
         print("Evaluating on Test Set...")
-        test_loss, test_acc, test_metrics = predictor.test(test_loader)
+        #test_loss, test_acc, test_metrics = predictor.test(test_loader)
         # /////
 
 
@@ -278,7 +323,7 @@ def save_exp(dataset_name, preprocess_method, model_name, seed, device, args):
 
         # 现在可以安全地在 GPU 上继续执行测试
         print("Evaluating on Test Set...")
-        test_loss, test_acc, test_metrics = predictor.test(test_loader)
+        #test_loss, test_acc, test_metrics = predictor.test(test_loader)
         # Perform final evaluation on the test set using the best model state
         test_loss, test_acc, test_metrics = predictor.test(test_loader)
 

@@ -6,10 +6,12 @@ import time
 import numpy as np
 from utils.metrics import calculate_metrics  # Assuming metrics.py exists
 from utils.logger import SingleExpRecorder  # Assuming logger.py has this
-
+import copy
 
 class BasePredictor:
     def __init__(self, model_conf, dataset_info, device):
+        self.best_model_state = None
+
         self.model_conf = model_conf
         self.training_conf = model_conf.training
         self.device = device
@@ -80,7 +82,7 @@ class BasePredictor:
             epoch_start_time = time.time()
             train_loss, train_acc = self._train_epoch(train_loader)
             val_loss, val_acc, _ = self.evaluate(val_loader)  # Evaluate on validation set
-            test_loss, test_acc, test_metrics = self.test(test_loader)
+
             epoch_time = time.time() - epoch_start_time
 
             if epoch % self.print_freq == 0 or self.debug:
@@ -89,6 +91,7 @@ class BasePredictor:
                       f'Train Loss: {train_loss:.4f} | Train Acc: {train_acc * 100:.2f}% | '
                       f'Val Loss: {val_loss:.4f} | Val Acc: {val_acc * 100:.2f}%')
 
+            test_loss, test_acc, test_metrics = self.test(test_loader)
             # Learning rate scheduler step (depends on scheduler type)
             if self.scheduler:
                 if isinstance(self.scheduler, optim.lr_scheduler.ReduceLROnPlateau):
@@ -104,14 +107,13 @@ class BasePredictor:
                 self.best_val_metric = val_acc
                 self.best_val_loss = val_loss
                 self.best_epoch = epoch
-                # Save results from the best epoch (including train/val performance)
+                self.best_model_state = copy.deepcopy(self.model.state_dict())
+
                 self.results['train_loss'] = train_loss
                 self.results['train_acc'] = train_acc
                 self.results['valid_loss'] = val_loss
                 self.results['valid_acc'] = val_acc
                 self.results['best_epoch'] = epoch + 1
-                # Optionally save model checkpoint here if needed
-                # torch.save(self.model.state_dict(), 'best_model.pth')
 
             if stop:
                 print(f'Early stopping triggered at epoch {epoch + 1} (Patience: {self.patience})')
@@ -138,6 +140,12 @@ class BasePredictor:
             "total_time": self.total_time,
             # Add other metrics if calculated during validation
         }
+        if self.best_model_state is not None:
+            self.model.load_state_dict(self.best_model_state)
+            print(f"Loaded best model from epoch {self.best_epoch + 1} for final testing.")
+        else:
+            print("Warning: No best model state was saved; using current model weights.")
+
         return final_result
 
     def _train_epoch(self, train_loader):
