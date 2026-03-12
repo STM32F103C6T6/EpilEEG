@@ -9,6 +9,118 @@ from sklearn.model_selection import train_test_split, StratifiedKFold, GroupKFol
 import numpy as np
 from sklearn.model_selection import KFold, train_test_split
 
+import glob
+import os
+import numpy as np
+from sklearn.model_selection import train_test_split, KFold
+
+
+def get_all_sample_list(processed_data_dir):
+    """
+    从 processed_data_dir 中扫描所有 *_labels.npy，
+    把所有 subject 的所有样本展开成一个统一列表。
+
+    Returns
+    -------
+    all_samples : list[tuple]
+        每个元素是 (subject_id, sample_idx)
+        例如: ('S001', 0), ('S001', 1), ('S002', 0)
+    """
+    search_pattern = os.path.join(processed_data_dir, "*_labels.npy")
+    label_files = glob.glob(search_pattern)
+
+    if not label_files:
+        raise FileNotFoundError(
+            f"No processed label files (*_labels.npy) found in {processed_data_dir}."
+        )
+
+    all_samples = []
+
+    for f_path in sorted(label_files):
+        basename = os.path.basename(f_path)
+
+        try:
+            subject_id = basename.rsplit("_labels.npy", 1)[0]
+        except Exception:
+            print(f"Warning: cannot parse subject id from {basename}")
+            continue
+
+        labels = np.load(f_path)
+        n_samples = len(labels)
+
+        for sample_idx in range(n_samples):
+            all_samples.append((subject_id, sample_idx))
+
+    if not all_samples:
+        raise ValueError(f"No valid samples found in {processed_data_dir}.")
+
+    print(f"Found total mixed samples: {len(all_samples)}")
+    return all_samples
+
+
+
+def split_all_samples_kfold_mixed(all_samples, n_splits=5, fold_idx=0, val_size=0.1, random_state=42):
+    """
+    将所有样本（不区分 subject / dataset）混在一起后，按样本级别做 KFold 划分。
+
+    Parameters
+    ----------
+    all_samples : list or np.ndarray
+        所有样本标识列表，每个元素通常为 (subject_id, sample_idx)
+    n_splits : int
+        K 折数
+    fold_idx : int
+        当前使用第几折作为测试集
+    val_size : float
+        从 train_val 中划分验证集比例
+    random_state : int
+        随机种子
+
+    Returns
+    -------
+    train_samples, val_samples, test_samples : list
+    """
+    all_samples = np.array(all_samples, dtype=object)
+
+    if len(all_samples) < n_splits:
+        raise ValueError(
+            f"Number of samples ({len(all_samples)}) is smaller than n_splits ({n_splits})."
+        )
+
+    if fold_idx < 0 or fold_idx >= n_splits:
+        raise ValueError(f"fold_idx must be in [0, {n_splits - 1}], got {fold_idx}")
+
+    if not (0 <= val_size < 1):
+        raise ValueError("val_size must be in [0, 1).")
+
+    kf = KFold(n_splits=n_splits, shuffle=True, random_state=random_state)
+    folds = list(kf.split(all_samples))
+
+    train_val_idx, test_idx = folds[fold_idx]
+    train_val_samples = all_samples[train_val_idx]
+    test_samples = all_samples[test_idx]
+
+    if val_size > 0:
+        if len(train_val_samples) < 2:
+            raise ValueError("Not enough train_val samples to create a validation set.")
+
+        train_samples, val_samples = train_test_split(
+            train_val_samples,
+            test_size=val_size,
+            random_state=random_state,
+            shuffle=True
+        )
+    else:
+        train_samples = train_val_samples
+        val_samples = np.array([], dtype=object)
+
+    print(f"Mixed sample-level KFold split: fold {fold_idx + 1}/{n_splits}")
+    print(f"Train samples: {len(train_samples)}")
+    print(f"Val samples:   {len(val_samples)}")
+    print(f"Test samples:  {len(test_samples)}")
+
+    return train_samples.tolist(), val_samples.tolist(), test_samples.tolist()
+
 
 def split_by_subject_loso_mixed_val(all_subjects, fold_idx=0):
     """

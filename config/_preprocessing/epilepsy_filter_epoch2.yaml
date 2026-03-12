@@ -2,7 +2,7 @@
 # Preprocessing config for epilepsy data: Band-pass filtering + Fixed-length epoching.
 
 # --- 改名以区分 ---
-name: epilepsy_filter_epoch
+name: epilepsy_filter_epoch2
 description: "Applies band-pass filtering (e.g., 0.5-45Hz) and then creates fixed-length epochs from epilepsy data. Labels epochs based on filename (ictal/interictal)."
 
 # --- 滤波配置 ---
@@ -16,7 +16,7 @@ filter:
 # --- Epoching Configuration (for fixed-length) ---
 epoching:
   epoch_duration: 2.0  # 每个 epoch 的秒数 (保持与之前一致或根据需要调整)
-  overlap: 0       # 重叠比例 (保持与之前一致或根据需要调整)
+  overlap: 0.5       # 重叠比例 (保持与之前一致或根据需要调整)
 
 # --- Artifact Rejection (保持禁用或根据需要启用) ---
 reject: null

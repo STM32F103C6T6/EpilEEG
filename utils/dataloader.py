@@ -5,6 +5,85 @@ import torch
 from torch.utils.data import Dataset, DataLoader, Subset
 
 
+class MixedSampleDataset(Dataset):
+    """
+    根据 sample_list = [(subject_id, sample_idx), ...]
+    从多个 subject 中抽取指定样本，组成一个新的样本级混合数据集。
+    """
+
+    def __init__(self, processed_data_dir, sample_list, target_transform=None):
+        self.epochs = []
+        self.labels = []
+        self.sample_subjects = []
+        self.target_transform = target_transform
+
+        subject_cache = {}
+
+        print(f"Loading mixed samples from {processed_data_dir}")
+        print(f"Total requested samples: {len(sample_list)}")
+
+        for subject_id, sample_idx in sample_list:
+            subject_str = str(subject_id)
+
+            if subject_str not in subject_cache:
+                epoch_file = os.path.join(processed_data_dir, f"{subject_str}_epochs.npy")
+                label_file = os.path.join(processed_data_dir, f"{subject_str}_labels.npy")
+
+                if not (os.path.exists(epoch_file) and os.path.exists(label_file)):
+                    raise FileNotFoundError(
+                        f"Data files not found for subject {subject_str}\n"
+                        f"Epochs: {epoch_file}\n"
+                        f"Labels: {label_file}"
+                    )
+
+                subj_epochs = np.load(epoch_file)
+                subj_labels = np.load(label_file)
+
+                if len(subj_epochs) != len(subj_labels):
+                    raise ValueError(
+                        f"Epoch/label length mismatch for subject {subject_str}: "
+                        f"{len(subj_epochs)} vs {len(subj_labels)}"
+                    )
+
+                subject_cache[subject_str] = (subj_epochs, subj_labels)
+
+            subj_epochs, subj_labels = subject_cache[subject_str]
+
+            if sample_idx < 0 or sample_idx >= len(subj_labels):
+                raise IndexError(
+                    f"sample_idx={sample_idx} out of range for subject {subject_str} "
+                    f"(n_samples={len(subj_labels)})"
+                )
+
+            self.epochs.append(subj_epochs[sample_idx])
+            self.labels.append(subj_labels[sample_idx])
+            self.sample_subjects.append(subject_str)
+
+        if len(self.labels) == 0:
+            raise RuntimeError("No valid mixed samples were loaded.")
+
+        self.epochs = np.stack(self.epochs, axis=0).astype(np.float32)
+        self.labels = np.array(self.labels, dtype=np.int64)
+        self.sample_subjects = np.array(self.sample_subjects)
+
+        print(f"Loaded total {len(self.labels)} mixed samples. Shape: {self.epochs.shape}")
+
+    def __len__(self):
+        return len(self.labels)
+
+    def __getitem__(self, idx):
+        epoch = self.epochs[idx]
+        label = self.labels[idx]
+
+        if self.target_transform:
+            label = self.target_transform(label)
+
+        epoch_tensor = torch.from_numpy(epoch)
+        label_tensor = torch.tensor(label, dtype=torch.long)
+
+        return epoch_tensor, label_tensor
+
+
 class EEGDataset(Dataset):
     """Loads preprocessed EEG epochs for a set of subjects."""
 
@@ -17,8 +96,8 @@ class EEGDataset(Dataset):
         """
         self.epochs = []
         self.labels = []
-        self.sample_subjects = []   # 每个 epoch 对应的 subject_id
-        self.subject_indices = []   # 每个 subject 在总数据中的起止索引
+        self.sample_subjects = []
+        self.subject_indices = []
         self.target_transform = target_transform
 
         current_idx = 0
@@ -31,8 +110,8 @@ class EEGDataset(Dataset):
 
             if os.path.exists(epoch_file) and os.path.exists(label_file):
                 try:
-                    subj_epochs = np.load(epoch_file)   # (n_epochs, n_channels, n_times)
-                    subj_labels = np.load(label_file)   # (n_epochs,)
+                    subj_epochs = np.load(epoch_file)
+                    subj_labels = np.load(label_file)
 
                     if len(subj_epochs) > 0 and len(subj_labels) > 0 and len(subj_epochs) == len(subj_labels):
                         self.epochs.append(subj_epochs)
@@ -111,31 +190,36 @@ def create_dataloaders(
     pin_memory=True,
     mixed_val=False,
     val_ratio=0.1,
-    split_seed=42
+    split_seed=42,
+    all_mixed=False
 ):
     """
     Creates DataLoaders for train, validation, and test sets.
 
-    Parameters
-    ----------
-    mixed_val : bool
-        False: 传统模式，train/val/test 分别按 subject 加载
-        True : test 仍按 subject 独立；train 和 val 从 train_subjects 的总数据中按样本切分
-    val_ratio : float
-        mixed_val=True 时，从 train_subjects 总样本中划出 val 的比例
-    split_seed : int
-        mixed_val=True 时，train/val 样本切分随机种子
+    Modes
+    -----
+    1) all_mixed=False, mixed_val=False
+       传统 subject-independent:
+       train / val / test 分别按 subject 加载
+
+    2) all_mixed=False, mixed_val=True
+       test 按 subject 独立；
+       train 和 val 从 train_subjects 的总样本中切分
+
+    3) all_mixed=True
+       train_subjects / val_subjects / test_subjects 实际上应为 sample_list:
+       [(subject_id, sample_idx), ...]
+       三个集合都按样本级直接构建
     """
 
-    if not mixed_val:
-        print("Using subject-independent train/val/test dataloaders...")
-        train_dataset = EEGDataset(processed_data_dir, train_subjects)
-        val_dataset = EEGDataset(processed_data_dir, val_subjects)
-        test_dataset = EEGDataset(processed_data_dir, test_subjects)
+    if all_mixed:
+        print("Using all-mixed sample-level dataloaders...")
+        train_dataset = MixedSampleDataset(processed_data_dir, train_subjects)
+        val_dataset = MixedSampleDataset(processed_data_dir, val_subjects)
+        test_dataset = MixedSampleDataset(processed_data_dir, test_subjects)
 
-    else:
+    elif mixed_val:
         print("Using mixed train/val mode: test is subject-independent, val is split from training samples...")
-        # 只加载 train_subjects 一次
         full_trainval_dataset = EEGDataset(processed_data_dir, train_subjects)
         test_dataset = EEGDataset(processed_data_dir, test_subjects)
 
@@ -151,6 +235,12 @@ def create_dataloaders(
 
         print(f"Mixed split done: {len(train_indices)} train samples, {len(val_indices)} val samples")
         print(f"Test samples: {len(test_dataset)}")
+
+    else:
+        print("Using subject-independent train/val/test dataloaders...")
+        train_dataset = EEGDataset(processed_data_dir, train_subjects)
+        val_dataset = EEGDataset(processed_data_dir, val_subjects)
+        test_dataset = EEGDataset(processed_data_dir, test_subjects)
 
     train_loader = DataLoader(
         train_dataset,

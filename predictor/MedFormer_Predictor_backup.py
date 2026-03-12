@@ -34,8 +34,6 @@ class MedFormer_Predictor(BasePredictor):
         for inputs, labels in train_loader:
             inputs, labels = inputs.to(self.device), labels.to(self.device)
 
-
-
             self.optimizer.zero_grad()
             # --- 调用 forward 时只传递 inputs (x_enc) ---
             outputs = self.model(inputs)

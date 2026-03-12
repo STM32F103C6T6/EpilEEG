@@ -1,0 +1,1 @@
+| Dataset: epilepsy_eeg    | Preprocessing: epilepsy_filter_epoch | Method: HAT             | Test Acc: 69.24 ¡À 0.00    | Test F1m: 66.01 ¡À 0.00    | Time: 367.13 ¡À 0.00   |

@@ -70,6 +70,8 @@ def main():
     parser.add_argument('--mixed_val', action='store_true',default=False,
                         help='Use subject-wise KFold for test, but mix train/val subjects and split val within training data')
     parser.add_argument('--loso', action='store_true',default=False, help='Use leave-one-subject-out split')
+    parser.add_argument('--all_mixed', action='store_true',
+                        help='Mix all samples from all subjects/datasets together and split at sample level.')
 
     args = parser.parse_args()
 

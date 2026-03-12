@@ -8,8 +8,16 @@ import importlib  # To dynamically import predictors
 from utils.tools import load_conf, setup_seed
 from utils.logger import MultiExpRecorder, ResultLogger  # Keep ResultLogger if needed here? Probably not.
 from utils.dataloader import create_dataloaders
-from utils.datasplit import split_by_subject, get_subject_list, split_by_subject_kfold, split_by_subject_kfold_mixed_val\
-    ,split_by_subject_loso_mixed_val  # Example split strategy
+from utils.datasplit import (
+    split_by_subject,
+    get_subject_list,
+    split_by_subject_kfold,
+    split_by_subject_kfold_mixed_val,
+    split_by_subject_loso_mixed_val,
+    get_all_sample_list,
+    split_all_samples_kfold_mixed,
+)
+
 import argparse
 import warnings
 import time
@@ -69,36 +77,56 @@ def save_exp(dataset_name, preprocess_method, model_name, seed, device, args):
         n_splits = args.n_splits
         fold_idx = args.fold_idx
 
-        if getattr(args, 'loso', False):
-            train_subjects, val_subjects, test_subjects = split_by_subject_loso_mixed_val(
-                all_subjects=all_subjects,
-                fold_idx=args.fold_idx
-            )
-            n_splits = len(all_subjects)
-        elif getattr(args, 'mixed_val', False):
-            train_subjects, val_subjects, test_subjects = split_by_subject_kfold_mixed_val(
-                all_subjects=all_subjects,
-                n_splits=args.n_splits,
-                fold_idx=args.fold_idx,
-                random_state=args.split_seed
-            )
-        else:
-            train_subjects, val_subjects, test_subjects = split_by_subject_kfold(
-                all_subjects=all_subjects,
+        if getattr(args, 'all_mixed', False):
+            all_samples = get_all_sample_list(processed_data_dir)
+            train_subjects, val_subjects, test_subjects = split_all_samples_kfold_mixed(
+                all_samples=all_samples,
                 n_splits=args.n_splits,
                 fold_idx=args.fold_idx,
                 val_size=getattr(dataset_conf.split, 'val_size', 0.1),
                 random_state=args.split_seed
             )
 
-        if not val_subjects:
-            print("Warning: No validation subjects found. Using test subjects as validation subjects.")
-            val_subjects = test_subjects
+            print(f"All-mixed sample split done: fold {fold_idx + 1}/{n_splits}")
+            print(f"Train mixed samples: {len(train_subjects)}")
+            print(f"Val mixed samples:   {len(val_subjects)}")
+            print(f"Test mixed samples:  {len(test_subjects)}")
 
-        print(f"K-Fold split done: fold {fold_idx + 1}/{n_splits}")
-        print(f"Train subjects ({len(train_subjects)}): {train_subjects}")
-        print(f"Val subjects   ({len(val_subjects)}): {val_subjects}")
-        print(f"Test subjects  ({len(test_subjects)}): {test_subjects}")
+        else:
+            all_subjects = get_subject_list(processed_data_dir)
+
+            if getattr(args, 'loso', False):
+                train_subjects, val_subjects, test_subjects = split_by_subject_loso_mixed_val(
+                    all_subjects=all_subjects,
+                    fold_idx=args.fold_idx
+                )
+                n_splits = len(all_subjects)
+
+            elif getattr(args, 'mixed_val', False):
+                train_subjects, val_subjects, test_subjects = split_by_subject_kfold_mixed_val(
+                    all_subjects=all_subjects,
+                    n_splits=args.n_splits,
+                    fold_idx=args.fold_idx,
+                    random_state=args.split_seed
+                )
+
+            else:
+                train_subjects, val_subjects, test_subjects = split_by_subject_kfold(
+                    all_subjects=all_subjects,
+                    n_splits=args.n_splits,
+                    fold_idx=args.fold_idx,
+                    val_size=getattr(dataset_conf.split, 'val_size', 0.1),
+                    random_state=args.split_seed
+                )
+
+            if not val_subjects:
+                print("Warning: No validation subjects found. Using test subjects as validation subjects.")
+                val_subjects = test_subjects
+
+            print(f"K-Fold split done: fold {fold_idx + 1}/{n_splits}")
+            print(f"Train subjects ({len(train_subjects)}): {train_subjects}")
+            print(f"Val subjects   ({len(val_subjects)}): {val_subjects}")
+            print(f"Test subjects  ({len(test_subjects)}): {test_subjects}")
 
     except Exception as e:
         print(f"Error during K-Fold subject splitting: {e}")
@@ -116,7 +144,8 @@ def save_exp(dataset_name, preprocess_method, model_name, seed, device, args):
             num_workers=args.num_workers,
             mixed_val=getattr(args, 'mixed_val', False),
             val_ratio=getattr(dataset_conf.split, 'val_size', 0.1),
-            split_seed=args.split_seed
+            split_seed=args.split_seed,
+            all_mixed=getattr(args, 'all_mixed', False),
         )
 
         # +++ 添加数据抽查 +++

@@ -30,7 +30,7 @@ model:
 # 训练过程配置
 training:
   optimizer: 'adamw'
-  lr: 0.0001
+  lr: 0.0001 #0.0001
   weight_decay: 0.01
   loss: 'crossentropyloss'
   batch_size: 64       # MedFormer 可能需要比 HAT 更小的 Batch Size
