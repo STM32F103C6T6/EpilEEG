@@ -1,5 +1,5 @@
 # predictor/EEGNet_Predictor.py
-from .Base_Predictor import BasePredictor
+from predictor.Base_Predictor import BasePredictor
 from models.eegnet import EEGNet  # Import the actual model class
 
 
@@ -12,11 +12,13 @@ class EEGNet_Predictor(BasePredictor):
 
         # Get model specific hyperparameters from config
         model_params = self.model_conf.model
-        dropoutRate = model_params.get('dropoutRate', 0.5)
-        kernLength = model_params.get('kernLength', 64)
-        F1 = model_params.get('F1', 8)
-        D = model_params.get('D', 2)
-        F2 = model_params.get('F2', 16)
+
+        # 使用 getattr() 替代 .get() 方法
+        dropoutRate = getattr(model_params, 'dropoutRate', 0.5)
+        kernLength = getattr(model_params, 'kernLength', 64)
+        F1 = getattr(model_params, 'F1', 8)
+        D = getattr(model_params, 'D', 2)
+        F2 = getattr(model_params, 'F2', 16)
         # Add any other specific params for EEGNet
 
         print(

@@ -34,7 +34,7 @@ class SingleExpRecorder:
                     self.best_loss = loss_val
         # Add 'either' or 'both' if needed
         else:  # Default: assume improvement if metric improves OR loss decreases significantly
-            if metric_val > self.best_metric or loss_val < self.best_loss * 0.99:  # Small tolerance for loss
+            if metric_val > self.best_metric or loss_val < self.best_loss * 0.99:  # Small tolerance for loss 加入=？
                 flag = True
                 self.best_metric = max(self.best_metric, metric_val)
                 self.best_loss = min(self.best_loss, loss_val)

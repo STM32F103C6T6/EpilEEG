@@ -275,7 +275,7 @@ def save_exp(dataset_name, preprocess_method, model_name, seed, device, args):
         # ====================================================================
 
         # 现在可以安全地在 GPU 上继续执行测试
-        print("Evaluating on Test Set...")
+        #print("Evaluating on Test Set...")
         #test_loss, test_acc, test_metrics = predictor.test(test_loader)
         # /////
 

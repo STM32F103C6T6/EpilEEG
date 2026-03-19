@@ -66,6 +66,6 @@ n_classes: 2
 # Data splitting configuration (based on subjects)
 split:
   type: 'subject'     # Ensures patient data stays within one set (train/val/test)
-  test_size: 0.25      # Proportion of subjects for the test set
-  val_size: 0.25       # Proportion of the remaining subjects for the validation set
+  test_size: 0.2      # Proportion of subjects for the test set 原2.5
+  val_size: 0.2       # Proportion of the remaining subjects for the validation set 原2.5
   # split_seed: 42    # Optional: Fixed seed for reproducible subject splits across runs

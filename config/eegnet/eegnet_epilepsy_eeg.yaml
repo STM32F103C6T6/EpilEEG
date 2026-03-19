@@ -1,0 +1,31 @@
+# config/eegnet/eegnet_physionet_eegmmidb.yaml
+# Configuration for EEGNet model on physionet_eegmmidb dataset
+
+# 模型超参数
+model:
+  # EEGNet specific parameters (adjust based on expected input shape and literature)
+  dropoutRate: 0.5
+  kernLength: 64   # Temporal convolution kernel size (adjust based on sfreq)
+  F1: 8            # Number of temporal filters
+  D: 2             # Depth multiplier for depthwise convolution
+  F2: 16           # Number of pointwise filters
+  # norm_rate: 0.25 # Constraint for max norm (optional, might require model modification)
+
+# 训练过程配置
+training:
+  optimizer: 'adam'    # Optimizer name ('adam', 'sgd', etc.)
+  lr: 0.001           # Learning rate
+  weight_decay: 0     # Weight decay (L2 penalty)
+  loss: 'crossentropyloss' # Loss function name
+  batch_size: 64      # Training batch size
+  epochs: 300         # Maximum number of training epochs
+  patience: 50        # Early stopping patience (epochs without improvement)
+  print_freq: 1      # Print training progress every N epochs
+  debug: false        # Enable debug logging/prints
+
+  # (可选) 学习率调度器配置
+  # scheduler:
+  #   type: 'reducelronplateau'
+  #   mode: 'min'       # 'min' for loss, 'max' for accuracy
+  #   factor: 0.1
+  #   patience: 10
