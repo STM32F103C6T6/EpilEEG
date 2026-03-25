@@ -80,8 +80,9 @@ class BasePredictor:
 
         for epoch in range(self.epochs):
             epoch_start_time = time.time()
-            train_loss, train_acc = self._train_epoch(train_loader)
-            val_loss, val_acc, _ = self.evaluate(val_loader)  # Evaluate on validation set
+            # 修改这里，接收train_metrics
+            train_loss, train_acc, train_metrics = self._train_epoch(train_loader)
+            val_loss, val_acc, val_metrics = self.evaluate(val_loader)  # 已经是3个返回值
 
             epoch_time = time.time() - epoch_start_time
 
@@ -91,7 +92,44 @@ class BasePredictor:
                       f'Train Loss: {train_loss:.4f} | Train Acc: {train_acc * 100:.2f}% | '
                       f'Val Loss: {val_loss:.4f} | Val Acc: {val_acc * 100:.2f}%')
 
-            test_loss, test_acc, test_metrics = self.test(test_loader)
+                # ✅ 修正：使用正确的指标名
+                # 获取训练集指标
+                train_f1 = train_metrics.get('f1_macro', 0.0)
+                train_auc = train_metrics.get('auc', np.nan)
+                train_sensitivity = train_metrics.get('sensitivity', np.nan)
+                train_specificity = train_metrics.get('specificity', np.nan)
+                train_kappa = train_metrics.get('kappa', 0.0)
+
+                # 获取验证集指标
+                val_f1 = val_metrics.get('f1_macro', 0.0)
+                val_auc = val_metrics.get('auc', np.nan)
+                val_sensitivity = val_metrics.get('sensitivity', np.nan)
+                val_specificity = val_metrics.get('specificity', np.nan)
+                val_kappa = val_metrics.get('kappa', 0.0)
+
+                # 打印训练集指标
+                print(f"  Train F1: {train_f1:.6f} | ", end='')
+                if not np.isnan(train_auc):
+                    print(f"Train AUC: {train_auc:.6f} | ", end='')
+                if not np.isnan(train_sensitivity):
+                    print(f"Train Sensitivity: {train_sensitivity:.6f} | ", end='')
+                if not np.isnan(train_specificity):
+                    print(f"Train Specificity: {train_specificity:.6f} | ", end='')
+                print(f"Train Kappa: {train_kappa:.6f}")
+
+                # 打印验证集指标
+                print(f"  Val F1: {val_f1:.6f} | ", end='')
+                if not np.isnan(val_auc):
+                    print(f"Val AUC: {val_auc:.6f} | ", end='')
+                if not np.isnan(val_sensitivity):
+                    print(f"Val Sensitivity: {val_sensitivity:.6f} | ", end='')
+                if not np.isnan(val_specificity):
+                    print(f"Val Specificity: {val_specificity:.6f} | ", end='')
+                print(f"Val Kappa: {val_kappa:.6f}")
+
+            # 测试集评估 - 移动到训练结束后
+            test_loss, test_acc, test_metrics = self.test(test_loader)  # 移到这里不合适
+
             # Learning rate scheduler step (depends on scheduler type)
             if self.scheduler:
                 if isinstance(self.scheduler, optim.lr_scheduler.ReduceLROnPlateau):
@@ -100,7 +138,6 @@ class BasePredictor:
                     self.scheduler.step()
 
             # Early stopping and best model saving logic
-            # Use validation accuracy as the primary metric here
             improved, stop = recorder.add(val_loss, val_acc)
 
             if improved:
@@ -111,8 +148,10 @@ class BasePredictor:
 
                 self.results['train_loss'] = train_loss
                 self.results['train_acc'] = train_acc
+                self.results['train_metrics'] = train_metrics  # 保存训练指标
                 self.results['valid_loss'] = val_loss
                 self.results['valid_acc'] = val_acc
+                self.results['valid_metrics'] = val_metrics  # 保存验证指标
                 self.results['best_epoch'] = epoch + 1
 
             if stop:
@@ -152,8 +191,9 @@ class BasePredictor:
         """Runs a single training epoch."""
         self.model.train()
         total_loss = 0
-        correct = 0
-        total = 0
+        all_preds = []
+        all_labels = []
+        all_probs = []
 
         for inputs, labels in train_loader:
             inputs, labels = inputs.to(self.device), labels.to(self.device)
@@ -162,18 +202,30 @@ class BasePredictor:
             outputs = self.model(inputs)
             loss = self.criterion(outputs, labels)
             loss.backward()
-            # Optional: Gradient clipping
-            # nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
             self.optimizer.step()
 
             total_loss += loss.item() * inputs.size(0)
-            _, predicted = torch.max(outputs.data, 1)
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()
 
-        avg_loss = total_loss / total if total > 0 else 0
-        accuracy = correct / total if total > 0 else 0
-        return avg_loss, accuracy
+            # 保存预测结果用于计算更多指标
+            _, predicted = torch.max(outputs.data, 1)
+            probabilities = torch.softmax(outputs, dim=1).detach().cpu().numpy()
+
+            all_preds.extend(predicted.cpu().numpy())
+            all_labels.extend(labels.cpu().numpy())
+            all_probs.append(probabilities)
+
+        all_probs = np.concatenate(all_probs, axis=0) if all_probs else np.array([])
+        avg_loss = total_loss / len(all_labels) if len(all_labels) > 0 else 0
+
+        # 计算训练集的详细指标
+        train_metrics = calculate_metrics(
+            np.array(all_labels),
+            np.array(all_preds),
+            y_prob=all_probs
+        )
+
+        accuracy = train_metrics.get("accuracy", 0.0)
+        return avg_loss, accuracy, train_metrics
 
     def evaluate(self, data_loader):
         """Evaluates the model on a given dataset."""
