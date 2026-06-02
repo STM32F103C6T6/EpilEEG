@@ -12,7 +12,7 @@ import onnxruntime as ort
 # 包含 (N, 33, 512) 形状数据的NPY文件
 NPY_DATA_PATH = 'processed_data/epilepsy_eeg/epilepsy_filter_epoch/Patient_004_epochs.npy'
 ONNX_MODEL_PATH = 'your_model.onnx'  # 你的ONNX模型文件名
-SERIAL_PORT = 'COM10'
+SERIAL_PORT = 'COM5'
 BAUDRATE = 115200*2
 SEND_INTERVAL_S = 3  # 发送每个包之间的延时
 

@@ -39,7 +39,7 @@ def create_packet(payload: bytes) -> bytes:
 # ====================================================================
 
 # ... (main 函数的其他部分无需修改) ...
-port = 'COM10'  # 请根据你的实际情况修改
+port = 'COM5'  # 请根据你的实际情况修改
 baudrate = 115200
 # 准备一个固定的测试数据
 length_bytes = struct.pack('<I', 4)

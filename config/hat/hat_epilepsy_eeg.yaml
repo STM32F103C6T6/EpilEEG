@@ -3,7 +3,7 @@
 # Target model size: roughly 3M-5M parameters (implementation-dependent)
 
 model:
-  structure_type: "parallel"
+  structure_type: "time->electrode"
 
   spatial:
     embed_dim: 128

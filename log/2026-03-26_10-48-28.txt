@@ -1,0 +1,1 @@
+| Dataset: epilepsy_eeg    | Preprocessing: epilepsy_filter_epoch | Method: transformer     | Test Acc: NaN             | Test F1m: NaN             | Time: NaN             |

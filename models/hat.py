@@ -178,18 +178,42 @@ class HAT(nn.Module):
                 ) for _ in range(fusion_cfg.num_layers)
             ])
             self.final_fusion_dim = fusion_cfg.embed_dim  # 融合 Transformer 输出维度
-        elif self.structure_type == 'parallel':
-            # 并行结构：分别对空间与时域结果投影后 concat，再融合
-            self.proj_spatial = nn.Linear(self.spatial_embed_dim, fusion_cfg.embed_dim // 2)  # 调整投影维度
-            self.proj_temporal = nn.Linear(self.temporal_embed_dim, fusion_cfg.embed_dim // 2)  # 调整投影维度
-            fusion_concat_dim = fusion_cfg.embed_dim  # 调整后的concat维度
-            self.fusion_norm = nn.LayerNorm(fusion_concat_dim)
-            # 修正：并行模式也需要一个融合层来处理拼接后的特征
-            # Option 1: Simple Linear layer
-            self.fusion_linear = nn.Linear(fusion_concat_dim, fusion_cfg.embed_dim)
-            # Option 2: Add more fusion transformer blocks if needed
-            # self.fusion_transformer_parallel = nn.ModuleList(...)
-            self.final_fusion_dim = fusion_cfg.embed_dim  # 最终用于分类的维度
+
+        elif self.structure_type in ['parallel', 'parallel_time']:
+            # parallel 结构要求 fusion embed dim 能被 2 整除
+            if fusion_cfg.embed_dim % 2 != 0:
+                raise ValueError("parallel / parallel_time 模式下 fusion.embed_dim 必须能被 2 整除")
+
+            self.parallel_branch_dim = fusion_cfg.embed_dim // 2
+
+            # 时间轴投影：parallel 和 parallel_time 共用同一种 temporal branch 维度
+            self.proj_temporal = nn.Linear(
+                self.temporal_embed_dim,
+                self.parallel_branch_dim
+            )
+
+            if self.structure_type == 'parallel':
+                # 并行结构：空间分支 + 时间分支
+                self.proj_spatial = nn.Linear(
+                    self.spatial_embed_dim,
+                    self.parallel_branch_dim
+                )
+
+                fusion_concat_dim = fusion_cfg.embed_dim
+
+                self.fusion_norm = nn.LayerNorm(fusion_concat_dim)
+                self.fusion_linear = nn.Linear(fusion_concat_dim, fusion_cfg.embed_dim)
+
+                self.final_fusion_dim = fusion_cfg.embed_dim
+
+            elif self.structure_type == 'parallel_time':
+                # 只保留 HAT parallel 中的时间轴分支
+                # 注意：这里的输出维度是 fusion_cfg.embed_dim // 2，
+                # 因为它对应 parallel 中 temporal branch 的真实输出维度。
+                self.temporal_only_norm = nn.LayerNorm(self.parallel_branch_dim)
+
+                self.final_fusion_dim = self.parallel_branch_dim
+
         else:
             raise ValueError(f"未知的结构类型: {self.structure_type}")
 
@@ -276,5 +300,25 @@ class HAT(nn.Module):
 
             out = self.classifier(fused_activated)  # 使用融合后的特征进行分类
             return out
+        elif self.structure_type == 'parallel_time':
+            # 只使用 parallel 中的时间轴分支
+            # 这里必须调用 _forward_temporal(x)，因为 pooling 在里面完成
+            x_temporal = self._forward_temporal(x)
+
+            # 与 parallel 模式中的 temporal branch 完全一致
+            x_temporal_proj = self.proj_temporal(x_temporal)  # [b, pooled_time, fusion_embed_dim/2]
+
+            # 时间轴全局平均池化
+            x_temporal_pool = reduce(
+                x_temporal_proj,
+                'b t e -> b e',
+                'mean'
+            )  # [b, fusion_embed_dim/2]
+
+            x_temporal_pool = self.temporal_only_norm(x_temporal_pool)
+
+            out = self.classifier(x_temporal_pool)
+            return out
+
         else:
             raise ValueError(f"未知的结构类型: {self.structure_type}")

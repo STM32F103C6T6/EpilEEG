@@ -1,0 +1,55 @@
+# config/transformer/transformer_epilepsy_eeg.yaml
+# Configuration for Pure Transformer model on the preprocessed epilepsy_eeg dataset
+# Target model size: roughly 3M-5M parameters (similar to HAT)
+
+model:
+  # Transformer主干配置
+  embed_dim: 192              # 特征维度，比HAT稍大以增强表达能力
+  num_heads: 8                # 注意力头数，与HAT保持一致
+  num_layers: 4               # Transformer编码器层数，比HAT略深
+  dim_feedforward: 384        # 前馈网络维度，2×embed_dim
+
+  # 输入处理模块
+  input_projection: true
+  patch_size: 1               # 不使用patch，直接使用原始时序点
+  use_cls_token: true         # 使用CLS token进行分类
+  use_positional_encoding: true
+
+  # 正则化与稳定训练
+  dropout: 0.2
+  attn_dropout: 0.1           # 注意力dropout
+  layer_norm_eps: 1e-6
+  activation: "gelu"          # 使用GELU激活函数，效果通常优于ReLU
+
+  # 分类头
+  classifier_hidden_dim: 256
+  classifier_dropout: 0.3
+
+  # 可选的改进策略
+  pre_norm: true              # 使用Pre-LayerNorm，训练更稳定
+  stochastic_depth: 0.1        # 随机深度，正则化
+
+  # 输入通道处理
+  channel_mixing: true        # 可选的通道混合层，增强空间信息处理
+  channel_mixing_dim: 64
+
+training:
+  optimizer: "adamw"
+  lr: 0.0003                  # Transformer通常需要稍大的学习率
+  weight_decay: 0.0001        # 稍小的权重衰减
+  loss: "crossentropyloss"
+  batch_size: 64              # 保持与HAT一致
+  epochs: 200
+  patience: 12
+  print_freq: 1
+  debug: false
+
+  # 梯度优化
+  gradient_clip: 1.0          # 梯度裁剪，防止梯度爆炸
+  warmup_epochs: 5            # 学习率预热
+
+  scheduler:
+    type: "cosineannealingwarmrestarts"  # 带重启的余弦退火
+    T_0: 25                    # 第一个重启周期
+    T_mult: 2                  # 周期倍增系数
+    eta_min: 1e-6
