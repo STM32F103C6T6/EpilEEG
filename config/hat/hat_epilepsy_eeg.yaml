@@ -3,7 +3,9 @@
 # Target model size: roughly 3M-5M parameters (implementation-dependent)
 
 model:
-  structure_type: "time->electrode"
+  structure_type: parallel_hatt32
+  sfreq: 256.0
+  use_spectral: true
 
   spatial:
     embed_dim: 128

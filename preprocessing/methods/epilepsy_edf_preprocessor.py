@@ -11,6 +11,43 @@ class EpilepsyEDFPreprocessor(BasePreprocessor):
     Assumes input data structure: data_dir/Patient_XXX/PXXX_SessYY_type_ZZ.edf
     Relies on dataset_conf for event_id mapping and label_map.
     """
+    def _print_channel_order(self, raw, title="Channel order"):
+        """
+        Print channel names in their current order.
+        """
+        print(f"      - {title}:")
+        for idx, ch_name in enumerate(raw.ch_names, start=1):
+            print(f"        {idx:02d}: {ch_name}")
+
+    def _drop_photic_channel(self, raw):
+        """
+        Drop useless Photic channel if it exists.
+        Matches names like:
+        - Photic
+        - EEG Photic
+        - PHOTIC
+        - EEG PHOTIC
+        """
+        if not isinstance(raw, mne.io.BaseRaw):
+            return raw
+
+        self._print_channel_order(raw, title="Channel order BEFORE dropping Photic")
+
+        photic_channels = [
+            ch for ch in raw.ch_names
+            if "photic" in ch.strip().lower()
+        ]
+
+        if photic_channels:
+            print(f"      - Dropping unused Photic channel(s): {photic_channels}")
+            raw.drop_channels(photic_channels)
+        else:
+            print("      - No Photic channel found.")
+
+        self._print_channel_order(raw, title="Channel order AFTER dropping Photic")
+        print(f"      - Channel count after dropping Photic: {len(raw.ch_names)}")
+
+        return raw
 
     def _get_subject_string(self, subject_id):
         """
@@ -182,6 +219,8 @@ class EpilepsyEDFPreprocessor(BasePreprocessor):
             print(f"    - Loading file {i + 1}: {fname}")
             try:
                 raw = mne.io.read_raw_edf(fpath, preload=True, verbose=False)
+
+                raw = self._drop_photic_channel(raw)#PHOTIC
 
                 # Basic check for EEG channels
                 eeg_names = raw.copy().pick("eeg").ch_names

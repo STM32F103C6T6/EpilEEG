@@ -240,35 +240,7 @@ def save_exp(dataset_name, preprocess_method, model_name, seed, device, args):
         onnx_filename = f"{dataset_name}_{preprocess_method}_{model_name}_seed{seed}_cpu.onnx"
         onnx_path = os.path.join(onnx_dir, onnx_filename)
 
-        # 6. 执行导出（使用副本）
-        try:
-            torch.onnx.export(
-                model_for_export,  # 使用副本进行导出
-                dummy_input_cpu,
-                onnx_path,
-                export_params=True,
-                opset_version=12,
-                do_constant_folding=True,
-                input_names=['input'],
-                output_names=['output'],
-                dynamic_axes={'input': {0: 'batch_size'},
-                              'output': {0: 'batch_size'}}
-            )
-            print(f"Successfully exported CPU-only ONNX model to: {onnx_path}")
 
-            # ... (验证部分代码可以保持不变) ...
-            # import onnx
-            # import onnxruntime
-            # providers = ['CPUExecutionProvider']
-            # ort_session = onnxruntime.InferenceSession(onnx_path, providers=providers)
-            # ort_inputs = {ort_session.get_inputs()[0].name: dummy_input_cpu.numpy()}
-            # ort_outs = ort_session.run(None, ort_inputs)
-            # print("ONNX model validation successful using CPUExecutionProvider!")
-
-        except Exception as e:
-            print(f"An error occurred during ONNX export or validation: {e}")
-            import traceback
-            traceback.print_exc()
 
         # ====================================================================
         # +++ ONNX 导出代码结束，原始 predictor 对象状态未被改变 +++
