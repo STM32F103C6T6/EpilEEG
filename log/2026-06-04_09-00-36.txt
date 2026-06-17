@@ -1,0 +1,1 @@
+| Dataset: epilepsy_eeg    | Preprocessing: epilepsy_filter_epoch | Method: EEGNet          | Test Acc: 51.56 ¡À 0.00    | Test F1m: 48.64 ¡À 0.00    | Time: 113.22 ¡À 0.00   |

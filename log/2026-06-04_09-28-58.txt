@@ -1,0 +1,1 @@
+| Dataset: epilepsy_eeg    | Preprocessing: epilepsy_filter_epoch | Method: transformer     | Test Acc: 53.83 ¡À 0.00    | Test F1m: 45.66 ¡À 0.00    | Time: 1569.23 ¡À 0.00  |

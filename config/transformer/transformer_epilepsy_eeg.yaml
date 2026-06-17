@@ -6,7 +6,7 @@ model:
   # Transformer主干配置
   embed_dim: 192              # 特征维度，比HAT稍大以增强表达能力
   num_heads: 8                # 注意力头数，与HAT保持一致
-  num_layers: 4               # Transformer编码器层数，比HAT略深
+  num_layers: 6               # Transformer编码器层数，比HAT略深
   dim_feedforward: 384        # 前馈网络维度，2×embed_dim
 
   # 输入处理模块

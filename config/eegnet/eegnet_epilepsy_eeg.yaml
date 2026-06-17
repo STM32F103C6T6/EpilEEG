@@ -6,9 +6,9 @@ model:
   # EEGNet specific parameters (adjust based on expected input shape and literature)
   dropoutRate: 0.5
   kernLength: 64   # Temporal convolution kernel size (adjust based on sfreq)
-  F1: 8            # Number of temporal filters
-  D: 2             # Depth multiplier for depthwise convolution
-  F2: 16           # Number of pointwise filters
+  F1: 16            # Number of temporal filters
+  D: 4             # Depth multiplier for depthwise convolution
+  F2: 64           # Number of pointwise filters
   # norm_rate: 0.25 # Constraint for max norm (optional, might require model modification)
 
 # 训练过程配置
