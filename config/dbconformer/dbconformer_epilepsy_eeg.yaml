@@ -1,0 +1,64 @@
+# config/dbconformer/dbconformer_epilepsy_eeg.yaml
+# DBConformer configuration for epilepsy_eeg.
+# Adapted from "DBConformer: Dual-branch Convolutional Transformer for EEG Decoding".
+#
+# Input expected by the adapted model:
+#   (batch, channels, time) = (B, 32, 512)
+#
+# Output:
+#   raw logits, shape (B, n_classes), for CrossEntropyLoss.
+
+model:
+  data_name: 'epilepsy_eeg'
+
+  # Core DBConformer dimensions.
+  emb_size: 40
+  tem_depth: 5
+  chn_depth: 5
+  num_heads: 10
+
+  # Temporal patch embedding.
+  # For n_times=512, patch_size=64 gives 8 temporal tokens.
+  patch_size: 64
+  kernel_size: 63
+  radix: 1
+  spa_dim: 16
+
+  # Branch options: 'all', 'temporal', 'spatial'
+  branch: 'all'
+
+  # Original defaults.
+  posemb_flag: true
+  gate_flag: false
+  chn_atten_flag: true
+
+  # Important for this project:
+  # Original code drops the last time point for many datasets.
+  # For 512 samples, keep false to avoid 512 -> 511 and positional mismatch.
+  drop_last_point: false
+
+  # Dropouts.
+  stem_dropout: 0.5
+  transformer_dropout: 0.5
+  classifier_dropout1: 0.5
+  classifier_dropout2: 0.3
+
+  # Keep false for normal training; true returns (features, logits).
+  return_features: false
+
+training:
+  optimizer: 'adamw'
+  lr: 0.001
+  weight_decay: 0.0001
+  loss: 'crossentropyloss'
+  batch_size: 64
+  epochs: 300
+  patience: 50
+  print_freq: 1
+  debug: false
+
+  # Use the scheduler name your current BasePredictor recognizes.
+  scheduler:
+    type: 'cosineannealing'
+    T_max: 300
+    eta_min: 1e-6

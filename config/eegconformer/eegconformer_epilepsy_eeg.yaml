@@ -1,0 +1,37 @@
+# config/eegconformer/eegconformer_epilepsy_eeg.yaml
+# EEGConformer configuration for epilepsy_eeg / epilepsy_filter_epoch.
+# Input shape in this project: (batch, channels, time) = (B, 32, 512)
+
+model:
+  # CNN patch embedding
+  n_filters_time: 40
+  filter_time_length: 25
+
+  # For n_times=512:
+  # After temporal conv: 512 - 25 + 1 = 488
+  # After AvgPool2d(kernel=75, stride=15): about 28 tokens
+  pool_time_length: 75
+  pool_time_stride: 15
+
+  # Transformer encoder
+  att_depth: 6
+  att_heads: 10       # n_filters_time must be divisible by att_heads
+  att_drop_prob: 0.5
+
+  # CNN dropout
+  drop_prob: 0.5
+
+  # Keep auto so the model computes FC input size from n_times
+  final_fc_length: "auto"
+  return_features: False
+
+training:
+  optimizer: 'adam'
+  lr: 0.001
+  weight_decay: 0
+  loss: 'crossentropyloss'
+  batch_size: 64
+  epochs: 300
+  patience: 50
+  print_freq: 1
+  debug: false

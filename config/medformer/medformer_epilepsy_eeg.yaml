@@ -1,44 +1,48 @@
 # config/medformer/medformer_epilepsy_eeg.yaml
-# Configuration for MedFormer model on the preprocessed epilepsy_eeg dataset
+# Minimal engineering-adapted MedFormer config.
+# 目的：先像 EEGNet 一样稳定接入工程，观察原始 MedFormer 主体表现。
+# 不使用 anti-collapse / logit calibration / 特殊 Predictor 训练逻辑。
 
-# 模型超参数 (需要与 MedFormer 模型实现匹配)
 model:
-  task_name: 'classification' # 必须是 classification
-  # output_attention: False # 是否输出注意力权重
+  task_name: 'classification'
 
-  # --- 核心模型参数 ---
-  d_model: 128          # 模型主维度
-  d_ff: 256           # FeedForward 层维度 (可以设为 d_model 的 2-4 倍)
-  n_heads: 8            # 注意力头数
-  e_layers: 3           # Encoder 层数
-  dropout: 0.2          # Dropout 比例
-  activation: 'gelu'    # 激活函数
+  # --- Core MedFormer parameters ---
+  d_model: 128
+  d_ff: 256
+  n_heads: 8
+  e_layers: 3
+  dropout: 0.2
+  activation: 'gelu'
 
-  # --- Patching 相关 ---
-  # 定义不同的 Patch 长度，用逗号分隔。MedFormer 的特色在于多尺度 Patch。
-  # 需要根据您的数据特性 (n_times=512, sfreq=256Hz) 选择。
-  # 示例：使用 16个点 (约 63ms) 和 32个点 (约 125ms) 的 Patch
+  # --- Multi-scale patching ---
   patch_len_list: "16,32"
-  # stride_list 通常与 patch_len_list 相同
 
-  # --- 其他 MedFormer 特定参数 ---
-  # augmentations: "affine,mask" # 可选的数据增强方法，逗号分隔，或留空 ""
-  augmentations: "mask"
-  single_channel: False     # False: 通道混合处理; True: 独立处理每个通道 (计算量大)
-  no_inter_attn: False      # 是否禁用 MedformerLayer 中的交互注意力
+  # 重要：
+  # 原始 GitHub Embed.py 会在 ListPatchEmbedding.forward() 中随机执行 augmentation。
+  # 如果这里设为 "mask"，验证/测试阶段也会随机 mask，导致结果不稳定。
+  # 所以第一轮工程适配基线先关掉。
+  augmentations: "none"
 
-# 训练过程配置
+  single_channel: False
+  no_inter_attn: False
+
 training:
   optimizer: 'adamw'
-  lr: 0.0001 #0.0001
-  weight_decay: 0.01
+
+  # 原配置 0.005 对 Transformer 偏激进，容易出现 logits/bias 来回摆动。
+  # 先用和 EEGNet 同量级的 0.001 做工程接入基线。
+  lr: 0.001
+
+  # 先降低正则干扰；确认能学习后再调 weight_decay/dropout。
+  weight_decay: 0.0
+
   loss: 'crossentropyloss'
-  batch_size: 64       # MedFormer 可能需要比 HAT 更小的 Batch Size
-  epochs: 100          # 增加训练轮数
+  batch_size: 64
+  epochs: 100
   patience: 20
   print_freq: 1
   debug: False
-  scheduler:
-    type: 'cosineannealinglr'
-    T_max: 100
-    eta_min: 1e-6
+
+  # 暂时不配置 scheduler。
+  # 你之前 BasePredictor 版本识别的是 'cosineannealing'，
+  # 而不是 'cosineannealinglr'，先去掉避免混淆。

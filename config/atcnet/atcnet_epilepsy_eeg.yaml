@@ -1,0 +1,51 @@
+# config/atcnet/atcnet_epilepsy_eeg.yaml
+# ATCNet configuration for epilepsy_eeg.
+# PyTorch adaptation of EEG-ATCNet:
+# CV block + Attention block + TCN block + sliding windows.
+
+model:
+  # Sliding windows in ATCNet encoder.
+  # With n_times=512, eegn_poolSize=7 usually gives enough post-conv sequence length for 5 windows.
+  n_windows: 5
+
+  # Attention options: 'mha', 'mhla', 'se', 'cbam', 'none'
+  # 'mhla' is mapped to MHA in this PyTorch adaptation for stable project compatibility.
+  attention: 'mha'
+  attention_heads: 2
+  attention_dropout: 0.5
+
+  # EEGNet-like convolutional block in original ATCNet.
+  eegn_F1: 16
+  eegn_D: 2
+  eegn_kernelSize: 64
+  eegn_poolSize: 7
+  eegn_dropout: 0.3
+
+  # Temporal convolutional network block.
+  tcn_depth: 2
+  tcn_kernelSize: 4
+  tcn_filters: 32
+  tcn_dropout: 0.3
+  tcn_activation: 'elu'
+
+  # Original ATCNet supports 'average' and 'concat'.
+  # 'average' is closer to the default paper implementation.
+  fuse: 'average'
+
+training:
+  optimizer: 'adamw'
+  lr: 0.001
+  weight_decay: 0.0001
+  loss: 'crossentropyloss'
+  batch_size: 64
+  epochs: 300
+  patience: 50
+  print_freq: 1
+  debug: false
+
+  # 你的 BasePredictor 如果只识别 cosineannealing，可用下面这个；
+  # 如果你已经扩展支持 cosineannealinglr，也可以改成 cosineannealinglr。
+  scheduler:
+    type: 'cosineannealing'
+    T_max: 300
+    eta_min: 1e-6

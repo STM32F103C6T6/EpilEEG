@@ -1,0 +1,45 @@
+# config/ctnet/ctnet_epilepsy_eeg.yaml
+# CTNet configuration for epilepsy_eeg.
+# Based on CTNet: CNN patch embedding + Transformer encoder.
+
+model:
+  # Transformer encoder
+  heads: 4
+  emb_size: 40
+  depth: 6
+  transformer_dropout: 0.5
+  forward_expansion: 4
+  forward_dropout: 0.5
+  positional_dropout: 0.1
+
+  # EEGNet-like CNN patch embedding
+  eeg1_f1: 20
+  eeg1_D: 2
+  eeg1_kernel_size: 64
+  eeg1_pooling_size1: 8
+  eeg1_pooling_size2: 8
+  eeg1_dropout_rate: 0.3
+
+  # Classification head
+  classifier_dropout: 0.5
+
+  # Keep false for normal CrossEntropyLoss training.
+  # If true, model returns (features, logits).
+  return_features: false
+
+training:
+  optimizer: 'adamw'
+  lr: 0.001
+  weight_decay: 0.0001
+  loss: 'crossentropyloss'
+  batch_size: 64
+  epochs: 300
+  patience: 50
+  print_freq: 1
+  debug: false
+
+  # Use the scheduler name recognized by your current BasePredictor.
+  scheduler:
+    type: 'cosineannealing'
+    T_max: 300
+    eta_min: 1e-6

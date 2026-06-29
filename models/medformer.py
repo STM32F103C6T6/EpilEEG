@@ -1,161 +1,292 @@
 # models/medformer.py
+# Adapted from the original GitHub MedFormer source.
+# 主体结构尽量保持原样，只做工程适配：
+# 1. 支持 Model(model_conf=..., dataset_info=...) 的构造方式
+# 2. 自动补齐原版 configs 需要的字段
+# 3. forward 支持只传 x_enc
+# 4. 自动把工程输入 (B, C, L) 转为原版需要的 (B, L, C)
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from types import SimpleNamespace
 
-try:
-    from layers.Medformer_EncDec import Encoder, EncoderLayer
-    from layers.SelfAttention_Family import MedformerLayer
-    from layers.Embed import ListPatchEmbedding
-except ImportError:
-    raise ImportError("Ensure layers 'Medformer_EncDec', 'SelfAttention_Family', 'Embed' are accessible.")
+from layers.Medformer_EncDec import Encoder, EncoderLayer
+from layers.SelfAttention_Family import MedformerLayer
+from layers.Embed import ListPatchEmbedding
 
 
-class Model(nn.Module):  # 可以考虑改名为 MedFormerModel 以示区分
+def _get_attr(obj, name, default=None):
+    if obj is None:
+        return default
+    if isinstance(obj, dict):
+        return obj.get(name, default)
+    return getattr(obj, name, default)
+
+
+def _to_bool(value, default=False):
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.lower() in ("true", "1", "yes", "y")
+    return bool(value)
+
+
+def _build_compatible_configs(configs=None, model_conf=None, dataset_info=None):
     """
-    MedFormer model adapted for the EEG Benchmark framework.
-    Paper link: https://arxiv.org/pdf/2405.19363
+    原始 GitHub 版 MedFormer 只接受 configs，且要求 configs 里有：
+        task_name, pred_len, output_attention, enc_in, seq_len,
+        single_channel, patch_len_list, d_model, d_ff, n_heads,
+        dropout, no_inter_attn, e_layers, activation, num_class, augmentations
+
+    你的工程里 Predictor 传的是：
+        MedFormerModel(model_conf=model_specific_conf, dataset_info=dataset_info)
+
+    这里仅做字段映射，不改变 MedFormer 主体结构。
+    """
+    if configs is None:
+        configs = model_conf
+
+    dataset_info = dataset_info or {}
+
+    n_channels = _get_attr(dataset_info, "n_channels", None)
+    n_times = _get_attr(dataset_info, "n_times", None)
+    n_classes = _get_attr(dataset_info, "n_classes", None)
+
+    # dataset_info 也可能是 dict
+    if isinstance(dataset_info, dict):
+        n_channels = dataset_info.get("n_channels", n_channels)
+        n_times = dataset_info.get("n_times", n_times)
+        n_classes = dataset_info.get("n_classes", n_classes)
+
+    task_name = _get_attr(configs, "task_name", "classification")
+
+    # 原版字段名是 enc_in / seq_len / num_class
+    enc_in = _get_attr(configs, "enc_in", n_channels)
+    seq_len = _get_attr(configs, "seq_len", n_times)
+    num_class = _get_attr(configs, "num_class", n_classes)
+
+    if enc_in is None:
+        raise ValueError("MedFormer requires enc_in or dataset_info['n_channels'].")
+    if seq_len is None:
+        raise ValueError("MedFormer requires seq_len or dataset_info['n_times'].")
+    if task_name == "classification" and num_class is None:
+        raise ValueError("MedFormer classification requires num_class or dataset_info['n_classes'].")
+
+    augmentations = _get_attr(configs, "augmentations", "none")
+    if augmentations is None or str(augmentations).strip() == "":
+        augmentations = "none"
+
+    compatible = SimpleNamespace(
+        # task
+        task_name=task_name,
+        pred_len=_get_attr(configs, "pred_len", 0),
+        output_attention=_to_bool(_get_attr(configs, "output_attention", False), False),
+
+        # data shape
+        enc_in=int(enc_in),
+        seq_len=int(seq_len),
+        num_class=int(num_class) if num_class is not None else None,
+
+        # model hyperparameters
+        d_model=int(_get_attr(configs, "d_model", 128)),
+        d_ff=int(_get_attr(configs, "d_ff", 256)),
+        n_heads=int(_get_attr(configs, "n_heads", 8)),
+        e_layers=int(_get_attr(configs, "e_layers", 3)),
+        dropout=float(_get_attr(configs, "dropout", 0.1)),
+        activation=_get_attr(configs, "activation", "gelu"),
+
+        # MedFormer-specific
+        patch_len_list=str(_get_attr(configs, "patch_len_list", "16,32")),
+        augmentations=str(augmentations),
+        single_channel=_to_bool(_get_attr(configs, "single_channel", False), False),
+        no_inter_attn=_to_bool(_get_attr(configs, "no_inter_attn", False), False),
+    )
+
+    return compatible
+
+
+class Model(nn.Module):
+    """
+    MedFormer, adapted minimally for this project.
+
+    Paper link in original source: https://arxiv.org/pdf/2405.19363
+
+    原版核心思想：
+    - 多尺度 patch embedding：patch_len_list 控制多个时间尺度
+    - CrossChannelTokenEmbedding：默认把 EEG 多通道作为一个整体做跨通道卷积嵌入
+    - MedformerLayer：每个尺度内部做 attention；多个尺度之间用 router token 做 inter attention
+    - classification：取每个尺度最后一个 router token，flatten 后接 Linear 分类头
     """
 
-    def __init__(self, model_conf, dataset_info):  # 接收 model_conf 和 dataset_info
+    def __init__(self, configs=None, model_conf=None, dataset_info=None):
         super(Model, self).__init__()
 
-        # --- 从 model_conf 和 dataset_info 中提取参数 ---
-        # 任务相关
-        self.task_name = getattr(model_conf, 'task_name', 'classification')  # 默认为分类
-        # self.pred_len = getattr(model_conf, 'pred_len', 0) # 分类任务不需要
-        self.output_attention = getattr(model_conf, 'output_attention', False)
+        configs = _build_compatible_configs(
+            configs=configs,
+            model_conf=model_conf,
+            dataset_info=dataset_info,
+        )
 
-        # 数据维度相关 - 从 dataset_info 获取
-        self.enc_in = dataset_info['n_channels']  # 输入通道数
-        self.seq_len = dataset_info['n_times']  # 输入序列长度 (时间点数)
-
-        # 模型结构相关 - 从 model_conf 获取
-        self.d_model = model_conf.d_model
-        self.d_ff = getattr(model_conf, 'd_ff', 4 * self.d_model)  # d_ff 默认 4 倍 d_model
-        self.n_heads = model_conf.n_heads
-        self.e_layers = model_conf.e_layers
-        self.dropout = model_conf.dropout
-        self.activation = getattr(model_conf, 'activation', 'gelu')
-        self.num_class = dataset_info['n_classes']  # 分类数从 dataset_info 获取
-
-        # Patching 相关 - 从 model_conf 获取
-        self.patch_len_list_str = model_conf.patch_len_list  # e.g., "16,32"
-        self.patch_len_list = list(map(int, self.patch_len_list_str.split(",")))
-        # 假设 stride 和 patch_len 相同
-        self.stride_list = self.patch_len_list
-        # 计算 patch 数量
-        self.patch_num_list = [
-            int((self.seq_len - patch_len) / stride + 2)  # 确保公式正确
-            for patch_len, stride in zip(self.patch_len_list, self.stride_list)
-        ]
-
-        # 其他配置
-        self.augmentations_str = getattr(model_conf, 'augmentations', "")  # e.g., "affine,mask" or ""
-        self.augmentations = self.augmentations_str.split(",") if self.augmentations_str else []
-        # MedFormer 的 ListPatchEmbedding 和 Encoder 设计似乎并不直接支持 single_channel=True
-        # (它在 Embedding 里尝试 reshape，但在 Encoder 输出时又丢失了通道信息)
-        # 强制 single_channel=False 以匹配 Encoder 的输出逻辑
-        self.single_channel = False
-        if getattr(model_conf, 'single_channel', False):
-            print("Warning: MedFormer adaptation currently forces single_channel=False due to Encoder output structure. Ignoring config value.")
-
-        # --- 参数提取结束 ---
+        self.configs = configs
+        self.task_name = configs.task_name
+        self.pred_len = configs.pred_len
+        self.output_attention = configs.output_attention
+        self.enc_in = configs.enc_in
+        self.seq_len = configs.seq_len
+        self.single_channel = configs.single_channel
 
         # Embedding
+        patch_len_list = list(map(int, configs.patch_len_list.split(",")))
+        stride_list = patch_len_list
+        seq_len = configs.seq_len
+        patch_num_list = [
+            int((seq_len - patch_len) / stride + 2)
+            for patch_len, stride in zip(patch_len_list, stride_list)
+        ]
+
+        augmentations = [
+            aug.strip()
+            for aug in configs.augmentations.split(",")
+            if aug.strip() != ""
+        ]
+        if len(augmentations) == 0:
+            augmentations = ["none"]
+
         self.enc_embedding = ListPatchEmbedding(
-            self.enc_in,
-            self.d_model,
-            self.seq_len,
-            self.patch_len_list,
-            self.stride_list,
-            self.dropout,
-            self.augmentations,
-            self.single_channel,
+            configs.enc_in,
+            configs.d_model,
+            configs.seq_len,
+            patch_len_list,
+            stride_list,
+            configs.dropout,
+            augmentations,
+            configs.single_channel,
         )
+
         # Encoder
         self.encoder = Encoder(
             [
                 EncoderLayer(
                     MedformerLayer(
-                        len(self.patch_len_list),
-                        self.d_model,
-                        self.n_heads,
-                        self.dropout,
-                        self.output_attention,
-                        getattr(model_conf, 'no_inter_attn', False),  # 从配置获取 no_inter_attn
+                        len(patch_len_list),
+                        configs.d_model,
+                        configs.n_heads,
+                        configs.dropout,
+                        configs.output_attention,
+                        configs.no_inter_attn,
                     ),
-                    self.d_model,
-                    self.d_ff,
-                    dropout=self.dropout,
-                    activation=self.activation,
+                    configs.d_model,
+                    configs.d_ff,
+                    dropout=configs.dropout,
+                    activation=configs.activation,
                 )
-                for l in range(self.e_layers)
+                for _ in range(configs.e_layers)
             ],
-            norm_layer=torch.nn.LayerNorm(self.d_model),
+            norm_layer=torch.nn.LayerNorm(configs.d_model),
         )
-        # Projection for Classification
+
+        # Decoder / Head
         if self.task_name == "classification":
-            self.act = getattr(F, self.activation, F.gelu)  # 使用配置的激活函数
-            self.dropout_layer = nn.Dropout(self.dropout)
-
-            # Encoder 输出形状是 (B, num_patch_lengths, D)
-            num_patch_lengths = len(self.patch_len_list)
-            projection_input_dim = num_patch_lengths * self.d_model
-            # print(f"DEBUG: Corrected projection_input_dim based on Encoder output: {projection_input_dim}")
-
+            self.act = F.gelu
+            self.dropout = nn.Dropout(configs.dropout)
             self.projection = nn.Linear(
-                projection_input_dim,
-                self.num_class,
+                configs.d_model
+                * len(patch_num_list)
+                * (1 if not self.single_channel else configs.enc_in),
+                configs.num_class,
             )
-        else:
-            self.projection = None
 
-    def classification(self, x_enc, x_mark_enc=None):  # x_mark_enc 在 EEG 分类中通常不用
+    def _normalize_x_enc(self, x_enc):
+        """
+        原始 GitHub 版 ListPatchEmbedding.forward() 注释中期望输入：
+            (batch_size, seq_len, enc_in) == (B, L, C)
+
+        你的工程 dataloader 输出：
+            (batch_size, channels, time) == (B, C, L)
+
+        因此这里仅在检测到 (B, C, L) 时转置为 (B, L, C)。
+        """
+        if x_enc.dim() != 3:
+            raise ValueError(
+                f"MedFormer expects a 3D input tensor, got shape={tuple(x_enc.shape)}"
+            )
+
+        # 工程格式: (B, C, L)
+        if x_enc.shape[1] == self.enc_in and x_enc.shape[2] == self.seq_len:
+            return x_enc.permute(0, 2, 1).contiguous()
+
+        # 原版格式: (B, L, C)
+        if x_enc.shape[1] == self.seq_len and x_enc.shape[2] == self.enc_in:
+            return x_enc
+
+        raise ValueError(
+            "MedFormer input shape mismatch. "
+            f"Expected (B, C, L)=(*,{self.enc_in},{self.seq_len}) "
+            f"or (B, L, C)=(*,{self.seq_len},{self.enc_in}), "
+            f"but got {tuple(x_enc.shape)}"
+        )
+
+    def forecast(self, x_enc, x_mark_enc, x_dec, x_mark_dec):
+        raise NotImplementedError
+
+    def imputation(self, x_enc, x_mark_enc, x_dec, x_mark_dec, mask):
+        raise NotImplementedError
+
+    def anomaly_detection(self, x_enc):
+        raise NotImplementedError
+
+    def classification(self, x_enc, x_mark_enc=None):
+        # Adapt project input shape to original MedFormer input shape.
+        x_enc = self._normalize_x_enc(x_enc)
+
         # Embedding
-        # 确保输入 x_enc 的形状是 (Batch, SeqLen, Channels) 或 (Batch, Channels, SeqLen)
-        # ListPatchEmbedding 期望 (B, L, C)
-        if x_enc.dim() == 3 and x_enc.shape[1] == self.enc_in and x_enc.shape[2] == self.seq_len:
-            # 输入是 (B, C, L), 转置为 (B, L, C)
-            x_enc = x_enc.permute(0, 2, 1)
-        elif x_enc.dim() != 3 or x_enc.shape[1] != self.seq_len or x_enc.shape[2] != self.enc_in:
-            raise ValueError(f"Expected input shape (B, L, C) or (B, C, L), got {x_enc.shape}")
+        enc_out = self.enc_embedding(x_enc)
+        enc_out, attns = self.encoder(enc_out, attn_mask=None)
 
-        enc_out = self.enc_embedding(x_enc)  # ListPatchEmbedding 输出是 (B, patch_num_sum, D)
-        enc_out, attns = self.encoder(enc_out, attn_mask=None)  # Encoder 输出是 (B, patch_num_sum, D)
+        if self.single_channel:
+            enc_out = torch.reshape(enc_out, (-1, self.enc_in, *enc_out.shape[-2:]))
 
-        # --- single_channel 处理逻辑需要根据 Encoder 实现确认 ---
-        # 原始代码的 reshape 可能不适用于所有情况，且与 projection_input_dim 计算相关
-        # if self.single_channel:
-        #    # 这个 reshape 可能需要调整，取决于 Encoder 如何处理 C 维度
-        #    enc_out = torch.reshape(enc_out, (-1, self.enc_in, *enc_out.shape[-2:])) # (B, C, patch_num_sum, D) ?
-
-        # Output Projection
-        output = self.act(enc_out)  # 应用激活函数
-        output = self.dropout_layer(output)  # 应用 Dropout 层
-
-        output = output.reshape(output.shape[0], -1)
-
+        # Output
+        output = self.act(
+            enc_out
+        )  # the output transformer encoder/decoder embeddings don't include non-linearity
+        output = self.dropout(output)
+        output = output.reshape(
+            output.shape[0], -1
+        )  # (batch_size, seq_length * d_model)
         output = self.projection(output)  # (batch_size, num_classes)
         return output
 
-    def forward(self, x_enc, x_mark_enc=None, x_dec=None, x_mark_dec=None, mask=None):  # 简化 forward 参数
-        if self.task_name == "classification":
-            # --- 输入维度调整 ---
-            # Dataloader 输出通常是 (B, C, L) 或 (B, L)
-            # MedFormer 分类需要 (B, L, C)
-            if x_enc.dim() == 3 and x_enc.shape[1] == self.enc_in:  # 输入是 (B, C, L)
-                x_enc = x_enc.permute(0, 2, 1)  # 转为 (B, L, C)
-            elif x_enc.dim() == 2:  # 输入是 (B, L)，需要扩展通道维度
-                x_enc = x_enc.unsqueeze(-1)  # 转为 (B, L, 1)，此时 enc_in 需为 1
-                if self.enc_in != 1:
-                    raise ValueError(f"Model configured for {self.enc_in} channels, but input has only 1.")
-            elif x_enc.dim() != 3 or x_enc.shape[2] != self.enc_in:
-                raise ValueError(f"Unexpected input shape: {x_enc.shape}. Expected (B, L, C) or (B, C, L).")
-            # --- 调整结束 ---
+    def forward(self, x_enc, x_mark_enc=None, x_dec=None, x_mark_dec=None, mask=None):
+        """
+        原版 forward 需要：
+            forward(x_enc, x_mark_enc, x_dec, x_mark_dec, mask=None)
 
-            dec_out = self.classification(x_enc, x_mark_enc)  # x_mark_enc 实际未使用
-            return dec_out
-        else:
-            print(f"Warning: task_name '{self.task_name}' not fully supported/implemented for this forward pass.")
-            return None  # 或者针对其他任务调用相应方法
+        你的工程训练时只会调用：
+            outputs = self.model(inputs)
+
+        所以这里把后三个参数设为可选，主体分支保持原样。
+        """
+        if (
+            self.task_name == "long_term_forecast"
+            or self.task_name == "short_term_forecast"
+        ):
+            dec_out = self.forecast(x_enc, x_mark_enc, x_dec, x_mark_dec)
+            return dec_out[:, -self.pred_len :, :]  # [B, L, D]
+
+        if self.task_name == "imputation":
+            dec_out = self.imputation(x_enc, x_mark_enc, x_dec, x_mark_dec, mask)
+            return dec_out  # [B, L, D]
+
+        if self.task_name == "anomaly_detection":
+            dec_out = self.anomaly_detection(x_enc)
+            return dec_out  # [B, L, D]
+
+        if self.task_name == "classification":
+            dec_out = self.classification(x_enc, x_mark_enc)
+            return dec_out  # [B, N]
+
+        return None
